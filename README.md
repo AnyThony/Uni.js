@@ -1,0 +1,30 @@
+# Fuse
+
+Fuse is a lightweight Javascript framework for building UI
+
+- Components
+- In-line scripting, the fuse way
+
+# Details
+
+Fuse utilizes it's own in-line scripting that runs in the context of corresponding DOM elements:
+
+```js
+<div id="container">
+  {
+    this.find("#foo").innerText += "Polo!";
+  }
+  <span id="foo">Marco</span>
+</div>
+```
+or
+```js
+<div id="container">
+  <span id="foo">
+    {
+      this.innerText += "Polo!";
+    }
+    Marco
+  </span>
+</div>
+```
