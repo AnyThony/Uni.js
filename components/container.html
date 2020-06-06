@@ -8,12 +8,12 @@
             var p = this.find("p");
 
             this.bindState(newState => {
-                p.innerText = "The current tick is " + newState.counter;
+                p.innerText = "Tick: " + newState.counter;
             });
-
-            var tick = () => this.setState({
-                counter: this.state.counter + 1
-            })
+            console.log("set Tick");
+            var tick = () => this.setState({counter: this.state.counter + 1})
+                
+            
             setInterval(tick, 1000);
         }
         <p></p>

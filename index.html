@@ -7,12 +7,11 @@
             {
                 this.imports = ["container"];
                 this.onFullLoad = () => {
+                    fuse.addComponent(this, "container");
                     console.log(this.id + " has fully loaded!");
-                    console.log(this.querySelector("img"));
                 }
             }
-            <container></container>
         </div>
     </body>
-    <script src="Fuse-DOM.js"></script>
+    <script src="fuseDOM.js"></script>
 </html>

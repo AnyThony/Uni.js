@@ -1,4 +1,4 @@
-
+var fuse;
 (() => {
     const TOK_START_JS = "{";
     const TOK_START_CSS = "{";
@@ -8,22 +8,42 @@
     const SCAN_JS = 0;
     const SCAN_CSS = 1;
     const parser = new DOMParser();
-
-    async function registerComponent(target, name){
-        var path = `/components/${name}.html`;
-        var response = await fetch(path);
-        if (!response.ok){
-            console.error(`${path} failed to load. It may have been moved or deleted.`);
-            return;
+    fuse = {
+        getComponentHTML: async (target, name) => {
+            var existingImport = target._rawImports[name];
+            if (existingImport){
+                return existingImport;
+            }
+            var path = `/components/${name}.html`;
+            var response = await fetch(path);
+            if (!response.ok){
+                console.error(`${path} failed to load. It may have been moved or deleted.`);
+                return false;
+            }
+            response = await response.text();
+            var responseDOM = parser.parseFromString(response, "text/html");
+            return responseDOM.getElementsByTagName("template")[0].innerHTML;
+        }, 
+        addComponent: async (parent, name) => {
+            var componentHTML = await fuse.getComponentHTML(parent, name);
+            let numChildOld = parent.children.length;
+            parent.innerHTML += componentHTML;
+            var children = parent.children;
+            for (var i = numChildOld; i < children.length; i++){
+                if (!children[i]._didInit){
+                    await evalElement(children[i])
+                }
+            }
         }
-        response = await response.text();
-        var responseDOM = parser.parseFromString(response, "text/html");
-        var componentHTML = responseDOM.getElementsByTagName("template")[0].innerHTML;
-        //console.log(componentHTML)
+    };
+
+    // called on startup to load all components referenced from custom alias elements
+    async function registerComponent(target, name){
+        var componentHTML = await fuse.getComponentHTML(target, name);
+        if (!componentHTML) return;
+
         for (var i = 0; i < target.childNodes.length; i++){
             var el = target.childNodes[i];
-            //console.log(el);
-            //console.log(el.tagName, name)
             if (el.tagName == name.toUpperCase()){
                     el.outerHTML = componentHTML;
             }
@@ -31,19 +51,22 @@
         }
     }
 
+    // setup environment and run a closure inside target context
     async function interpret(target, closure) {
         //console.log("running", closure)
         var result = {
             onFullLoad: null,
             onChildLoad: null
         }
-
+        target._didInit = true;
         var _cl = Function(` 
+            this._rawImports = {}
             this._stateChangeListens = [];
             this.find = this.querySelector;
             this.bindState = function (cb){
                 if (this.state){
                     this._stateChangeListens.push(cb);
+                    
                     cb(this.state);
                 }
                 else if (this != document.body){
@@ -51,19 +74,22 @@
                 }
             }
             this.setState = function(newState){
+                
                 var updated = false;
                 if (this.state){
+                    
                     for (var key in newState) {
                         if (newState.hasOwnProperty(key)) {
                             var val = newState[key];
                             if (this.state[key] !== undefined){
-                                this.state[key] = val;
+                                
                                 if (!updated){
                                     this._stateChangeListens.forEach(f => {
                                         f(newState);
                                     });
                                     updated = true;
                                 }
+                                this.state[key] = val;
                                 
                                 delete newState[key]
                             }
@@ -103,11 +129,12 @@
         return result;
     }
 
+    // parse the raw data for code
     function scanForClosure(data, type) {
         var TOK_START = type;
         var left = data && data[0] == TOK_START ? 0 : -1;
         var right = -1;
-        //console.log("scanning", data)
+
         for (var i = 0; i < data.length - 1; i++) {
             if (data[i] == "\\"){
                 continue;
@@ -120,16 +147,18 @@
             }
 
         }
-        //console.log('done scan', [left, right])
+
         return [left, right]
     }
 
-    async function parseScript(target, childCallbacks = []) {
+    // initially for being called on document body, evaluates js on
+    // first node if found, recurses on children
+    async function evalElement(target) {
         
         if (!target.childNodes.length){
             return;
         }
-        //console.log("parsing", target)
+
         var rootValue = target.childNodes[0].nodeValue;
         var closureI = scanForClosure(rootValue, TOK_START_JS)
         var startI = closureI[0];
@@ -149,7 +178,9 @@
             var child = target.children[i];
             if (IGNORE_INTERPRET.indexOf(child.tagName) == -1) {
                 try {
-                    parseScript(child);
+                    if (!child._didInit){
+                        evalElement(child);
+                    }
                 }
                 catch (e) {
                     console.error(e);
@@ -162,35 +193,7 @@
         if (interpreted.onFullLoad) {
             interpreted.onFullLoad();
         }
-        //parseStyle(target);
     }
-    function parseStyle(target){ //unsure about adding this feature
-        if (target.childNodes.length < 3){
-            return;
-        }
-        var i = 1;
-        while (i < target.childNodes.length){
-            var lastNode = target.childNodes[i];
-            //console.log("node",lastNode.nodeType)
-            if (lastNode.nodeType != 3){
-                i++;
-                continue;
-            }
-            lastNode = lastNode.nodeValue;
-            var closureI = scanForClosure(lastNode, TOK_START_CSS)
-            var startI = closureI[0];
-            var endI = closureI[1];
-            //console.log(startI, endI);
-            if (startI != -1 && endI != -1) {
-                var styles = lastNode.substring(startI + 1, endI)
-                //console.log("applying", styles)
-                target.style = styles;
-                target.childNodes[i].nodeValue = lastNode.replace(
-                    lastNode.substring(startI, endI + 2), "");
-                break;
-            }
-            i += 1;
-        }
-    }
-    parseScript(document.body);
+
+    evalElement(document.body);
 })()
