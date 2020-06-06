@@ -1,0 +1,21 @@
+<template>
+    <div id ="container">
+        {
+            this.state = {
+                counter: 0
+            };
+
+            var p = this.find("p");
+
+            this.bindState(newState => {
+                p.innerText = "The current tick is " + newState.counter;
+            });
+
+            var tick = () => this.setState({
+                counter: this.state.counter + 1
+            })
+            setInterval(tick, 1000);
+        }
+        <p></p>
+    </div>
+</template>

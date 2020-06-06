@@ -10,7 +10,7 @@
     const parser = new DOMParser();
 
     async function registerComponent(target, name){
-        var path = `/components/${name}.tpl`;
+        var path = `/components/${name}.html`;
         var response = await fetch(path);
         if (!response.ok){
             console.error(`${path} failed to load. It may have been moved or deleted.`);
@@ -37,10 +37,46 @@
             onFullLoad: null,
             onChildLoad: null
         }
-        target.find = target.querySelector;
-        target.findAll = target.querySelectorAll;
-        target.parent = target.parentElement;
-        var _cl = Function(`
+
+        var _cl = Function(` 
+            this._stateChangeListens = [];
+            this.find = this.querySelector;
+            this.bindState = function (cb){
+                if (this.state){
+                    this._stateChangeListens.push(cb);
+                    cb(this.state);
+                }
+                else if (this != document.body){
+                    this.parentElement.bindState(cb);
+                }
+            }
+            this.setState = function(newState){
+                var updated = false;
+                if (this.state){
+                    for (var key in newState) {
+                        if (newState.hasOwnProperty(key)) {
+                            var val = newState[key];
+                            if (this.state[key] !== undefined){
+                                this.state[key] = val;
+                                if (!updated){
+                                    this._stateChangeListens.forEach(f => {
+                                        f(newState);
+                                    });
+                                    updated = true;
+                                }
+                                
+                                delete newState[key]
+                            }
+                        }
+                    }
+                    if (Object.keys(newState).length && this != document.body){
+                        this.parentElement.setState(newState);
+                    }
+                }
+                else if (this != document.body){
+                    this.parentElement.setState(newState);
+                }
+            }
             ${closure} 
             return {
                 onFullLoad: typeof this.onFullLoad === 'function' ? this.onFullLoad : null,
@@ -99,12 +135,16 @@
         var startI = closureI[0];
         var endI = closureI[1];
         var interpreted = {};
-        if (startI != -1 && endI != -1) {
-            var closure = rootValue.substring(startI + 1, endI)
+        var closure = rootValue.substring(startI + 1, endI)
+        if (startI == -1 || endI == -1) { 
+            closure = "";
+        }
+        else{
             target.childNodes[0].nodeValue = rootValue.replace(
                 rootValue.substring(startI, endI + 2), "");
-            interpreted = await interpret(target, closure);
         }
+        interpreted = await interpret(target, closure);
+        
         for (var i = 0; i < target.children.length; i++) {
             var child = target.children[i];
             if (IGNORE_INTERPRET.indexOf(child.tagName) == -1) {
@@ -122,9 +162,9 @@
         if (interpreted.onFullLoad) {
             interpreted.onFullLoad();
         }
-        parseStyle(target);
+        //parseStyle(target);
     }
-    function parseStyle(target){
+    function parseStyle(target){ //unsure about adding this feature
         if (target.childNodes.length < 3){
             return;
         }

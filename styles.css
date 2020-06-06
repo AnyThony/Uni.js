@@ -12,8 +12,7 @@ body {
 #container {
     padding: 60px;
     height: 100%;
-    width: 50%;
+    width: 400px;
     background-color: white;
-    position: fixed;
-    left: 25%;
+    margin: 0 auto;
 }
