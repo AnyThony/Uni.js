@@ -2,6 +2,7 @@
 
 Fuse is a lightweight Javascript framework for building UI
 
+- Hierarchy state management
 - Components
 - In-line scripting, the fuse way
 
