@@ -28,3 +28,20 @@ or
   </span>
 </div>
 ```
+# Components
+```js
+<template>
+  <div class="timer">
+    <span>
+      {
+        var count = 0;
+        setInterval(() => {
+          count++;
+          this.innerText = count;
+        }, 1000)
+      }
+      0
+    </span>
+  </div>
+</template>
+```
