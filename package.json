@@ -1,0 +1,23 @@
+{
+  "name": "fuse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "html-webpack-plugin": "^4.3.0",
+    "path": "^0.12.7",
+    "webpack": "^4.43.0",
+    "webpack-dev-server": "^3.11.0"
+  },
+  "devDependencies": {
+    "webpack-cli": "^3.3.11",
+    "webpack-serve": "^3.2.0"
+  },
+  "scripts": {
+    "webpack-dev-server": "webpack-dev-server",
+    "dev": "live-server",
+    "prod": "webpack --mode=production"
+  },
+  "author": "",
+  "license": "ISC"
+}

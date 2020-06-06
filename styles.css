@@ -1,0 +1,19 @@
+body {
+    margin: 0;
+    background-color: rgb(88, 39, 76);
+}
+
+#container img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#container {
+    padding: 60px;
+    height: 100%;
+    width: 50%;
+    background-color: white;
+    position: fixed;
+    left: 25%;
+}

@@ -1,0 +1,17 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
+    <body>
+        <div id="root">
+            {
+                this.imports = ["container"];
+                this.onFullLoad = () => {
+                    console.log(this.id + " has fully loaded!");
+                }
+            }
+            <container></container>
+        </div>
+    </body>
+    <script src="Fuse-DOM.js"></script>
+</html>
