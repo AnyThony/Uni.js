@@ -1,0 +1,8 @@
+<template>
+    <div class ="test1">
+        {
+            console.log("test1")
+        }
+        hi!
+    </div>
+</template>

@@ -1,3 +1,5 @@
+
+console.log("Fuse loaded");
 var fuse;
 (() => {
     const TOK_START_JS = "{";
@@ -10,11 +12,14 @@ var fuse;
     const parser = new DOMParser();
     fuse = {
         getComponentHTML: async (target, name) => {
-            var existingImport = target._rawImports[name];
+            var existingImport = fuse._rawComponents && fuse._rawComponents[name];
             if (existingImport){
-                return existingImport;
+                //console.log(existingImport);
+                var responseDOM = parser.parseFromString(existingImport, "text/html");
+                //console.log(responseDOM.getElementsByTagName("template")[0].innerHTML)
+                return responseDOM.getElementsByTagName("template")[0].innerHTML;
             }
-            var path = `/components/${name}.html`;
+            var path = `/components/${name}.fus`;
             var response = await fetch(path);
             if (!response.ok){
                 console.error(`${path} failed to load. It may have been moved or deleted.`);
@@ -24,17 +29,24 @@ var fuse;
             var responseDOM = parser.parseFromString(response, "text/html");
             return responseDOM.getElementsByTagName("template")[0].innerHTML;
         }, 
-        addComponent: async (parent, name) => {
+        addComponent: async (name, parent) => {
             var componentHTML = await fuse.getComponentHTML(parent, name);
             let numChildOld = parent.children.length;
-            parent.innerHTML += componentHTML;
-            var children = parent.children;
+            var component = document.createElement('DIV');
+            component.innerHTML = componentHTML;
+            for (var i = 0; i < component.children.length; i++){
+                parent.appendChild(component.children[i]);
+            }
+            var children = parent.children;   
             for (var i = numChildOld; i < children.length; i++){
                 if (!children[i]._didInit){
+                    console.log("eval", children[i])
                     await evalElement(children[i])
                 }
             }
-        }
+        },
+        _evalElement: evalElement,
+        _ignore_interpret: IGNORE_INTERPRET
     };
 
     // called on startup to load all components referenced from custom alias elements
@@ -53,7 +65,7 @@ var fuse;
 
     // setup environment and run a closure inside target context
     async function interpret(target, closure) {
-        //console.log("running", closure)
+        //console.log("running", target)
         var result = {
             onFullLoad: null,
             onChildLoad: null
@@ -160,7 +172,7 @@ var fuse;
         }
 
         var rootValue = target.childNodes[0].nodeValue;
-        var closureI = scanForClosure(rootValue, TOK_START_JS)
+        var closureI = rootValue && rootValue.trim() ? scanForClosure(rootValue, TOK_START_JS) : [-1, -1]
         var startI = closureI[0];
         var endI = closureI[1];
         var interpreted = {};
@@ -171,8 +183,8 @@ var fuse;
         else{
             target.childNodes[0].nodeValue = rootValue.replace(
                 rootValue.substring(startI, endI + 2), "");
+            interpreted = await interpret(target, closure);
         }
-        interpreted = await interpret(target, closure);
         
         for (var i = 0; i < target.children.length; i++) {
             var child = target.children[i];

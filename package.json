@@ -4,18 +4,22 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "chokidar": "^3.4.0",
+    "dom-parser": "^0.1.6",
     "html-webpack-plugin": "^4.3.0",
+    "live-server": "^1.2.1",
     "path": "^0.12.7",
     "webpack": "^4.43.0",
     "webpack-dev-server": "^3.11.0"
   },
   "devDependencies": {
+    "concurrently": "^5.2.0",
     "webpack-cli": "^3.3.11",
     "webpack-serve": "^3.2.0"
   },
   "scripts": {
     "webpack-dev-server": "webpack-dev-server",
-    "dev": "live-server",
+    "dev": "concurrently --kill-others \"live-server --WATCH=/build --mount=/:%cd%/build\" \"node bundle/watch\"",
     "prod": "webpack --mode=production"
   },
   "author": "",

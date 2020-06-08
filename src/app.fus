@@ -1,0 +1,34 @@
+<html>
+    <head>
+        <link rel="stylesheet" type="text/css" href="styles.css">
+    </head>
+    <body>
+        <div id="root">
+            {
+                this.imports = ["container"];
+                this.state = {
+                    data: 14
+                }
+                this.onFullLoad = () => {
+                    this.setState({data: 222})
+                }
+                this.onChildLoad = (c) => {console.log("chilsd", c)}
+
+            }
+            <div id="child">
+                {
+                    this.imports = ["container"];
+                    console.log("context2", this)
+                    this.parentElement.bindState(newState =>{
+                        console.log(newState)
+                    })
+                    console.log("hsssadss2dssadse332 2");
+                }
+                <container></container>
+            </div>
+            <container></container>
+        </div>
+    </body>
+    <script src="fuseDOM.js"></script>
+    <script src="main.js"></script>
+</html>

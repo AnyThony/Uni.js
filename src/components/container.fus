@@ -1,6 +1,7 @@
 <template>
-    <div id ="container">
+    <div class ="container">
         {
+            this.imports = ["test1"]
             this.state = {
                 counter: 0
             };
@@ -10,12 +11,12 @@
             this.bindState(newState => {
                 p.innerText = "Tick: " + newState.counter;
             });
-            console.log("set Tick");
-            var tick = () => this.setState({counter: this.state.counter + 1})
-                
             
+            var tick = () => this.setState({counter: this.state.counter + 1})
+                //aadsddssssssss2ssssssssssssssssssssssssssssss
             setInterval(tick, 1000);
         }
         <p></p>
+        <test1>2222</test1>
     </div>
 </template>
