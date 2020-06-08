@@ -66,4 +66,4 @@ function watch(args){
     });
 }
 
-module.exports = {init, watch}
+module.exports = {init, build, watch}
