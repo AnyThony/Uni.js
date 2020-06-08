@@ -3,6 +3,6 @@
         {
             console.log("test1")
         }
-        hi!
+        hi2!
     </div>
 </template>

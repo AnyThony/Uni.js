@@ -1,16 +1,16 @@
 {
   "name": "fuse",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "",
-  "main": "index.js",
+  "main": "./fuse-cli/index.js",
   "dependencies": {
     "chokidar": "^3.4.0",
     "dom-parser": "^0.1.6",
+    "figlet": "^1.4.0",
     "html-webpack-plugin": "^4.3.0",
     "live-server": "^1.2.1",
-    "path": "^0.12.7",
-    "webpack": "^4.43.0",
-    "webpack-dev-server": "^3.11.0"
+    "ncp": "^2.0.0",
+    "path": "^0.12.7"
   },
   "devDependencies": {
     "concurrently": "^5.2.0",
@@ -18,10 +18,11 @@
     "webpack-serve": "^3.2.0"
   },
   "scripts": {
-    "webpack-dev-server": "webpack-dev-server",
-    "dev": "concurrently --kill-others \"live-server --WATCH=/build --mount=/:%cd%/build\" \"node bundle/watch\"",
-    "prod": "webpack --mode=production"
+    
   },
-  "author": "",
+  "bin": {
+    "fuse": "./fuse-cli/index.js"
+  },
+  "author": "Anthony Nguyen",
   "license": "ISC"
 }

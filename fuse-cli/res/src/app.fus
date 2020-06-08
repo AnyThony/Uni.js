@@ -10,10 +10,9 @@
                     data: 14
                 }
                 this.onFullLoad = () => {
-                    this.setState({data: 222})
+                    this.setState({data: 2221});
                 }
-                this.onChildLoad = (c) => {console.log("chilsd", c)}
-
+                this.onChildLoad = (c) => {console.log("chsssssssssssssild", c)}
             }
             <div id="child">
                 {
@@ -22,9 +21,8 @@
                     this.parentElement.bindState(newState =>{
                         console.log(newState)
                     })
-                    console.log("hsssadss2dssadse332 2");
+                    console.log("abcdefgs");
                 }
-                <container></container>
             </div>
             <container></container>
         </div>

@@ -1,19 +1,21 @@
 async function renderInitComponents(target = null) {
-    function childIndex(parent, child){
-        for (var i = 0; i < parent.children.length; i++){
-            if (parent.children[i] == child){
+    function childIndex(parent, child) {
+        for (var i = 0; i < parent.children.length; i++) {
+            if (parent.children[i] == child) {
                 return i;
             }
         }
         return -1;
     }
+
     if (!target)
         target = document.body
-    console.log("init",target);
     var tag = target.tagName;
-    if (fuse._ignore_interpret.indexOf(tag.toUpperCase()) != -1){
+
+    if (fuse._ignore_interpret.indexOf(tag.toUpperCase()) != -1) {
         return;
     }
+
     var parent = target.parentElement;
     if (parent.imports && parent.imports.indexOf(tag.toLowerCase()) != -1) {
         var componentHTML = fuse._rawComponents[tag.toLowerCase()]
@@ -23,10 +25,10 @@ async function renderInitComponents(target = null) {
             parent.children[lenOld].outerHTML = parent.children[lenOld].innerHTML;
             for (var i = lenOld; i < parent.children.length; i++) {
                 var child = parent.children[i];
-                if (!child._didInit){
+                if (!child._didInit) {
                     await fuse._evalElement(parent.children[i]);
                 }
-                else{
+                else {
                     break;
                 }
             }
@@ -36,7 +38,7 @@ async function renderInitComponents(target = null) {
     for (var j = 0; j < target.children.length; j++) {
         await renderInitComponents(target.children[j]);
     }
-    
+
 }
 
 // ran before every closure

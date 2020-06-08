@@ -1,4 +1,3 @@
-
 console.log("Fuse loaded");
 var fuse;
 (() => {
@@ -46,8 +45,29 @@ var fuse;
             }
         },
         _evalElement: evalElement,
-        _ignore_interpret: IGNORE_INTERPRET
+        _ignore_interpret: IGNORE_INTERPRET,
+        _getWrapContext: getWrapContext
     };
+
+    function getWrapContext(target){
+        // TODO: wrapper
+        return target;
+        const handler = {
+            set: function(obj, prop, value) {
+                if (typeof obj[prop] == "undefined"){
+                    this[prop] = value;
+                }
+                else {
+                    obj[prop] = prop;
+                }
+            },
+            get: function (obj, prop) {
+                return obj[prop] || this[prop];
+            }
+        };
+        
+        return new Proxy(target, handler);
+    }
 
     // called on startup to load all components referenced from custom alias elements
     async function registerComponent(target, name){
@@ -122,7 +142,8 @@ var fuse;
                 imports: typeof this.imports === 'object' ? this.imports : null
             }
         `);
-        var evaluated = _cl.call(target);
+        var _context = getWrapContext(target)
+        var evaluated = _cl.call(_context);
         if (evaluated.imports){
             var imports = evaluated.imports;
             for (var i = 0; i < imports.length; i++){
@@ -183,8 +204,8 @@ var fuse;
         else{
             target.childNodes[0].nodeValue = rootValue.replace(
                 rootValue.substring(startI, endI + 2), "");
-            interpreted = await interpret(target, closure);
         }
+        interpreted = await interpret(target, closure);
         
         for (var i = 0; i < target.children.length; i++) {
             var child = target.children[i];
