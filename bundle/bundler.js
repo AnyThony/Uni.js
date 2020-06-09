@@ -1,5 +1,5 @@
 /*
-* This script compiles all user scripts of the app.fus
+* This script compiles all user scripts of app.uni
 * Any nested or dynamic components are processed on runtime by uniDOM.js
 */
 const [,,...args] = process.argv;
@@ -19,7 +19,7 @@ if (!fs.existsSync(path.join(root_dir, "src"))){
     root_dir = root_dir + '/../';
 }
 
-var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.fus"), "utf8");
+var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
 var dom = parser.parseFromString(htmlRaw);
 
 let indexBuffer = dom.rawHTML;

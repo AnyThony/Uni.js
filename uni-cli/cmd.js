@@ -10,7 +10,7 @@ var ncp = require('ncp').ncp;
 ncp.limit = 16;
 
 function init(args) {
-    console.log(figlet.textSync('UniJS', {
+    console.log(figlet.textSync('Uni.JS', {
         font: 'Standard',
         horizontalLayout: 'default',
         verticalLayout: 'default'

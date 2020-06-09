@@ -18,7 +18,7 @@ var uni;
                 //console.log(responseDOM.getElementsByTagName("template")[0].innerHTML)
                 return responseDOM.getElementsByTagName("template")[0].innerHTML;
             }
-            var path = `/components/${name}.fus`;
+            var path = `/components/${name}.uni`;
             var response = await fetch(path);
             if (!response.ok){
                 console.error(`${path} failed to load. It may have been moved or deleted.`);
