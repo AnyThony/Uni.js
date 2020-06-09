@@ -1,5 +1,5 @@
-console.log("Fuse loaded");
-var fuse;
+console.log("uni loaded");
+var uni;
 (() => {
     const TOK_START_JS = "{";
     const TOK_START_CSS = "{";
@@ -9,9 +9,9 @@ var fuse;
     const SCAN_JS = 0;
     const SCAN_CSS = 1;
     const parser = new DOMParser();
-    fuse = {
+    uni = {
         getComponentHTML: async (target, name) => {
-            var existingImport = fuse._rawComponents && fuse._rawComponents[name];
+            var existingImport = uni._rawComponents && uni._rawComponents[name];
             if (existingImport){
                 //console.log(existingImport);
                 var responseDOM = parser.parseFromString(existingImport, "text/html");
@@ -29,7 +29,7 @@ var fuse;
             return responseDOM.getElementsByTagName("template")[0].innerHTML;
         }, 
         addComponent: async (name, parent) => {
-            var componentHTML = await fuse.getComponentHTML(parent, name);
+            var componentHTML = await uni.getComponentHTML(parent, name);
             let numChildOld = parent.children.length;
             var component = document.createElement('DIV');
             component.innerHTML = componentHTML;
@@ -71,7 +71,7 @@ var fuse;
 
     // called on startup to load all components referenced from custom alias elements
     async function registerComponent(target, name){
-        var componentHTML = await fuse.getComponentHTML(target, name);
+        var componentHTML = await uni.getComponentHTML(target, name);
         if (!componentHTML) return;
 
         for (var i = 0; i < target.childNodes.length; i++){

@@ -1,14 +1,14 @@
-# Fuse
+# uni
 
-Fuse is a lightweight Javascript framework for building UI
+uni is a lightweight Javascript framework for building UI
 
 - Hierarchy state management
 - Components
-- In-line scripting, the fuse way
+- In-line scripting, the uni way
 
 # Details
 
-Fuse utilizes it's own in-line scripting that runs in the context of corresponding DOM elements:
+uni utilizes it's own in-line scripting that runs in the context of corresponding DOM elements:
 
 ```js
 <div id="container">

@@ -1,6 +1,6 @@
 /*
 * This script compiles all user scripts of the app.fus
-* Any nested or dynamic components are processed on runtime by fuseDOM.js
+* Any nested or dynamic components are processed on runtime by uniDOM.js
 */
 const [,,...args] = process.argv;
 var root_dir;
@@ -104,9 +104,9 @@ async function main(){
     fs.writeFileSync( path.join(root_dir, "./build/main.js"), scriptBuffer );
     fs.writeFileSync( path.join(root_dir, "./build/index.html"), indexBuffer );
 
-    var fuseBuffer = fs.readFileSync( __dirname + '/../dist/fuseDOM.js' );
+    var uniBuffer = fs.readFileSync( __dirname + '/../dist/uniDOM.js' );
 
-    fs.writeFileSync( path.join(root_dir, "./build/fuseDOM.js"), fuseBuffer);
+    fs.writeFileSync( path.join(root_dir, "./build/uniDOM.js"), uniBuffer);
 
     var styleBuffer = fs.readFileSync( path.join(root_dir, "./src/styles.css"));
 

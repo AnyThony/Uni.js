@@ -10,7 +10,7 @@ var ncp = require('ncp').ncp;
 ncp.limit = 16;
 
 function init(args) {
-    console.log(figlet.textSync('FuseJS', {
+    console.log(figlet.textSync('uniJS', {
         font: 'Standard',
         horizontalLayout: 'default',
         verticalLayout: 'default'
@@ -37,7 +37,7 @@ function init(args) {
           return console.error(err);
         }
         resPkg.name = projectName;
-        resPkg.scripts.dev = `concurrently --kill-others \"fuse build && live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" \"fuse watch\"`;
+        resPkg.scripts.dev = `concurrently --kill-others \"uni build && live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" \"uni watch\"`;
         fs.writeFileSync(root + "/package.json", JSON.stringify(resPkg, null, 2));
         console.log(`Project dir ${projectName} created`);
         console.log('Initializing npm...');

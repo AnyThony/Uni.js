@@ -12,13 +12,13 @@ async function renderInitComponents(target = null) {
         target = document.body
     var tag = target.tagName;
 
-    if (fuse._ignore_interpret.indexOf(tag.toUpperCase()) != -1) {
+    if (uni._ignore_interpret.indexOf(tag.toUpperCase()) != -1) {
         return;
     }
 
     var parent = target.parentElement;
     if (parent.imports && parent.imports.indexOf(tag.toLowerCase()) != -1) {
-        var componentHTML = fuse._rawComponents[tag.toLowerCase()]
+        var componentHTML = uni._rawComponents[tag.toLowerCase()]
         if (componentHTML) {
             var lenOld = childIndex(parent, target);
             target.outerHTML = componentHTML;
@@ -26,7 +26,7 @@ async function renderInitComponents(target = null) {
             for (var i = lenOld; i < parent.children.length; i++) {
                 var child = parent.children[i];
                 if (!child._didInit) {
-                    await fuse._evalElement(parent.children[i]);
+                    await uni._evalElement(parent.children[i]);
                 }
                 else {
                     break;

@@ -24,9 +24,9 @@ function scanForClosure(data) {
 }
 
 function makeScript(cMap) {
-    //(${closureData.fuseLibrary.toString()})();
+    //(${closureData.uniLibrary.toString()})();
     return `
-        fuse._rawComponents = ${JSON.stringify(cMap)};
+        uni._rawComponents = ${JSON.stringify(cMap)};
 
         function runClosure(closure, context){
             var raw = \`
@@ -37,7 +37,7 @@ function makeScript(cMap) {
                 onChildLoad: typeof this.onChildLoad === 'function' ? this.onChildLoad : null,
                 imports: typeof this.imports === 'object' ? this.imports : null
             }\`
-            var _wrapContext = fuse._getWrapContext(context)
+            var _wrapContext = uni._getWrapContext(context)
             var _cl = Function(raw);
             _cl.call(_wrapContext);
             return _cl

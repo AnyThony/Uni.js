@@ -27,6 +27,6 @@
             <container></container>
         </div>
     </body>
-    <script src="fuseDOM.js"></script>
+    <script src="uniDOM.js"></script>
     <script src="main.js"></script>
 </html>
