@@ -1,0 +1,17 @@
+<template>
+  <div class="jumbotron banner">
+    {
+      console.log(this.className + " has loaded.")
+    }
+    <h1 class="display-4">Uni + Bootstrap Starter App</h1>
+    <div class="ban-body">
+      <p class="lead">Congrats! You've succesfully setup the starter app.</p>
+      <p class="lead">Use this as a foundation for your future projects to come.</p>
+    </div>
+    <hr class="my-4">
+    <p>If you'd like to support Uni consider contributing on GitHub:</p>
+    <a class="btn btn-primary btn-lg" 
+       href="https://github.com/AnyThony/Uni" 
+       target="_blank" role="button">Learn more</a>
+  </div>
+</template>

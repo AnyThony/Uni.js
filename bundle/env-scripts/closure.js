@@ -6,7 +6,7 @@ async function renderInitComponents(target = null) {
             }
         }
         return -1;
-    }
+    };
 
     if (!target)
         target = document.body
@@ -55,7 +55,7 @@ function preClosure() {
         else if (this != document.body) {
             this.parentElement.bindState(cb);
         }
-    }
+    };
     this.setState = function (newState) {
 
         var updated = false;
@@ -82,10 +82,10 @@ function preClosure() {
                 this.parentElement.setState(newState);
             }
         }
-        else if (this != document.body) {
+        else if (this != document.body && this.parentElement) {
             this.parentElement.setState(newState);
         }
-    }
+    };
 }
 
 // ran after every closure

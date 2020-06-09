@@ -104,7 +104,7 @@ var uni;
                 else if (this != document.body){
                     this.parentElement.bindState(cb);
                 }
-            }
+            };
             this.setState = function(newState){
                 
                 var updated = false;
@@ -131,16 +131,16 @@ var uni;
                         this.parentElement.setState(newState);
                     }
                 }
-                else if (this != document.body){
+                else if (this != document.body && this.parentElement){
                     this.parentElement.setState(newState);
                 }
-            }
+            };
             ${closure} 
             return {
                 onFullLoad: typeof this.onFullLoad === 'function' ? this.onFullLoad : null,
                 onChildLoad: typeof this.onChildLoad === 'function' ? this.onChildLoad : null,
                 imports: typeof this.imports === 'object' ? this.imports : null
-            }
+            };
         `);
         var _context = getWrapContext(target)
         var evaluated = _cl.call(_context);
