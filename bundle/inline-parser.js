@@ -24,7 +24,7 @@ function scanForClosure(data) {
 }
 
 function makeScript(cMap) {
-    //(${closureData.htmlLibrary.toString()})();
+    //(${closureData.uniLibrary.toString()})();
     return `
         uni._rawComponents = ${JSON.stringify(cMap)};
 
