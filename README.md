@@ -1,8 +1,11 @@
+# About
 Uni is a lightweight Javascript framework for building UI
 
 - Hierarchy state management
 - Components
 - In-line scripting
+
+#### Refer to the more in-depth documentation [here](https://anythony.github.io/uni-docs/)
 
 # Setup
 
