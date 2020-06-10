@@ -10,37 +10,35 @@ var uni;
     const SCAN_CSS = 1;
     const parser = new DOMParser();
     uni = {
-        getComponentHTML: async (target, name) => {
+        getComponentHTML: async(target, name) => {
             var existingImport = uni._rawComponents && uni._rawComponents[name];
-            if (existingImport){
-                //console.log(existingImport);
-                var responseDOM = parser.parseFromString(existingImport, "text/html");
-                //console.log(responseDOM.getElementsByTagName("template")[0].innerHTML)
-                return responseDOM.getElementsByTagName("template")[0].innerHTML;
+            var response;
+            if (existingImport) {
+                response = existingImport;
+            } else {
+                var path = `/components/${name}.uni`;
+                response = await fetch(path);
+                if (!response.ok) {
+                    console.error(`${path} failed to load. It may have been moved or deleted.`);
+                    return false;
+                }
+                response = await response.text();
             }
-            var path = `/components/${name}.uni`;
-            var response = await fetch(path);
-            if (!response.ok){
-                console.error(`${path} failed to load. It may have been moved or deleted.`);
-                return false;
-            }
-            response = await response.text();
             var responseDOM = parser.parseFromString(response, "text/html");
             return responseDOM.getElementsByTagName("template")[0].innerHTML;
-        }, 
-        addComponent: async (name, parent) => {
+        },
+        addComponent: async(name, parent, props) => {
             var componentHTML = await uni.getComponentHTML(parent, name);
             let numChildOld = parent.children.length;
             var component = document.createElement('DIV');
             component.innerHTML = componentHTML;
-            for (var i = 0; i < component.children.length; i++){
+            for (var i = 0; i < component.children.length; i++) {
                 parent.appendChild(component.children[i]);
             }
-            var children = parent.children;   
-            for (var i = numChildOld; i < children.length; i++){
-                if (!children[i]._didInit){
-                    console.log("eval", children[i])
-                    await evalElement(children[i])
+            var children = parent.children;
+            for (var i = numChildOld; i < children.length; i++) {
+                if (!children[i]._didInit) {
+                    await evalElement(children[i], props)
                 }
             }
         },
@@ -49,49 +47,50 @@ var uni;
         _getWrapContext: getWrapContext
     };
 
-    function getWrapContext(target){
+    function getWrapContext(target) {
         // TODO: wrapper
         return target;
         const handler = {
             set: function(obj, prop, value) {
-                if (typeof obj[prop] == "undefined"){
+                if (typeof obj[prop] == "undefined") {
                     this[prop] = value;
-                }
-                else {
+                } else {
                     obj[prop] = prop;
                 }
             },
-            get: function (obj, prop) {
+            get: function(obj, prop) {
                 return obj[prop] || this[prop];
             }
         };
-        
+
         return new Proxy(target, handler);
     }
 
     // called on startup to load all components referenced from custom alias elements
-    async function registerComponent(target, name){
+    async function registerComponent(target, name) {
         var componentHTML = await uni.getComponentHTML(target, name);
         if (!componentHTML) return;
 
-        for (var i = 0; i < target.childNodes.length; i++){
+        for (var i = 0; i < target.childNodes.length; i++) {
             var el = target.childNodes[i];
-            if (el.tagName == name.toUpperCase()){
-                    el.outerHTML = componentHTML;
+            if (el.tagName == name.toUpperCase()) {
+                el.outerHTML = componentHTML;
             }
 
         }
     }
 
     // setup environment and run a closure inside target context
-    async function interpret(target, closure) {
+    async function interpret(target, closure, props) {
         //console.log("running", target)
         var result = {
             onFullLoad: null,
             onChildLoad: null
         }
         target._didInit = true;
+        target.props = props;
         var _cl = Function(` 
+            this.addComponent = (name, props = {}) => uni.addComponent(name, this, props);
             this._rawImports = {}
             this._stateChangeListens = [];
             this.find = this.querySelector;
@@ -144,9 +143,9 @@ var uni;
         `);
         var _context = getWrapContext(target)
         var evaluated = _cl.call(_context);
-        if (evaluated.imports){
+        if (evaluated.imports) {
             var imports = evaluated.imports;
-            for (var i = 0; i < imports.length; i++){
+            for (var i = 0; i < imports.length; i++) {
                 await registerComponent(target, imports[i]);
             }
         }
@@ -169,13 +168,12 @@ var uni;
         var right = -1;
 
         for (var i = 0; i < data.length - 1; i++) {
-            if (data[i] == "\\"){
+            if (data[i] == "\\") {
                 continue;
             }
             if (left == -1 && data[i + 1] == TOK_START) {
                 left = i + 1;
-            }
-            else if (data[i + 1] == TOK_END) {
+            } else if (data[i + 1] == TOK_END) {
                 right = i + 1;
             }
 
@@ -186,36 +184,30 @@ var uni;
 
     // initially for being called on document body, evaluates js on
     // first node if found, recurses on children
-    async function evalElement(target) {
-        
-        if (!target.childNodes.length){
-            return;
-        }
+    async function evalElement(target, props = {}) {
 
-        var rootValue = target.childNodes[0].nodeValue;
+        var rootValue = (target.childNodes.length && target.childNodes[0].nodeValue) || '';
         var closureI = rootValue && rootValue.trim() ? scanForClosure(rootValue, TOK_START_JS) : [-1, -1]
         var startI = closureI[0];
         var endI = closureI[1];
         var interpreted = {};
         var closure = rootValue.substring(startI + 1, endI)
-        if (startI == -1 || endI == -1) { 
+        if (startI == -1 || endI == -1) {
             closure = "";
-        }
-        else{
+        } else {
             target.childNodes[0].nodeValue = rootValue.replace(
                 rootValue.substring(startI, endI + 2), "");
         }
-        interpreted = await interpret(target, closure);
-        
+        interpreted = await interpret(target, closure, props);
+
         for (var i = 0; i < target.children.length; i++) {
             var child = target.children[i];
             if (IGNORE_INTERPRET.indexOf(child.tagName) == -1) {
                 try {
-                    if (!child._didInit){
+                    if (!child._didInit) {
                         evalElement(child);
                     }
-                }
-                catch (e) {
+                } catch (e) {
                     console.error(e);
                 }
                 if (interpreted.onChildLoad) {

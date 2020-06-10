@@ -27,8 +27,7 @@ async function renderInitComponents(target = null) {
                 var child = parent.children[i];
                 if (!child._didInit) {
                     await uni._evalElement(parent.children[i]);
-                }
-                else {
+                } else {
                     break;
                 }
             }
@@ -43,20 +42,20 @@ async function renderInitComponents(target = null) {
 
 // ran before every closure
 function preClosure() {
+    this.addComponent = (name) => uni.addComponent(name, this);
     this._rawImports = {};
     this._stateChangeListens = [];
     this.find = this.querySelector;
-    this.bindState = function (cb) {
+    this.bindState = function(cb) {
         if (this.state) {
             this._stateChangeListens.push(cb);
 
             cb(this.state);
-        }
-        else if (this != document.body) {
+        } else if (this != document.body) {
             this.parentElement.bindState(cb);
         }
     };
-    this.setState = function (newState) {
+    this.setState = function(newState) {
 
         var updated = false;
         if (this.state) {
@@ -81,8 +80,7 @@ function preClosure() {
             if (Object.keys(newState).length && this != document.body) {
                 this.parentElement.setState(newState);
             }
-        }
-        else if (this != document.body && this.parentElement) {
+        } else if (this != document.body && this.parentElement) {
             this.parentElement.setState(newState);
         }
     };
