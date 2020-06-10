@@ -5,7 +5,7 @@ Uni is a lightweight Javascript framework for building UI
 - Components
 - In-line scripting
 
-#### Refer to the more in-depth documentation [here](https://anythony.github.io/uni-docs/)
+#### Refer to the documentation [here](https://anythony.github.io/uni-docs/)
 
 # Setup
 
@@ -94,6 +94,20 @@ You can then declare a regular HTML element with its tagname:
   <navbar></navbar>
 </body>
 ```
+      
+Components can be added dynamically with this.addComponent(name):
+
+### addComponent(name)
+```js       
+<body>
+  {
+    this.imports = ["navbar"];
+    this.addComponent("navbar");
+  }
+</body>
+```
+
+addComponent appends a new component as a child into the script context.
 
 # State Management
 Uni respects the DOM tree's hierarchy when processing state management
