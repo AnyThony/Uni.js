@@ -4,7 +4,7 @@ var uni;
     const TOK_START_JS = "{";
     const TOK_START_CSS = "{";
     const TOK_END = "}";
-    const TOKENS = [TOK_START_JS, TOK_START_CSS, TOK_END]
+    const TOKENS = [TOK_START_JS, TOK_START_CSS, TOK_END];
     const IGNORE_INTERPRET = ["SCRIPT", "LINK", "HTML", "HEAD", "LINK", "IFRAME", "TITLE"];
     const SCAN_JS = 0;
     const SCAN_CSS = 1;
@@ -29,14 +29,14 @@ var uni;
         },
         addComponent: async(name, parent, props) => {
             var componentHTML = await uni.getComponentHTML(parent, name);
-            let numChildOld = parent.children.length;
+            var numChildOld = parent.children.length;
             var component = document.createElement('DIV');
             component.innerHTML = componentHTML;
-            for (var i = 0; i < component.children.length; i++) {
+            for (let i = 0; i < component.children.length; i++) {
                 parent.appendChild(component.children[i]);
             }
             var children = parent.children;
-            for (var i = numChildOld; i < children.length; i++) {
+            for (let i = numChildOld; i < children.length; i++) {
                 if (!children[i]._didInit) {
                     await evalElement(children[i], props)
                 }
@@ -66,6 +66,17 @@ var uni;
         return new Proxy(target, handler);
     }
 
+    function getProps(target) {
+        var props = {};
+        var nameList = target.getAttributeNames();
+        for (let i = 0; i < nameList.length; i++) {
+            let name = nameList[i];
+            props[name] = target.getAttribute(name);
+        }
+
+        return props;
+    }
+
     // called on startup to load all components referenced from custom alias elements
     async function registerComponent(target, name) {
         var componentHTML = await uni.getComponentHTML(target, name);
@@ -74,7 +85,10 @@ var uni;
         for (var i = 0; i < target.childNodes.length; i++) {
             var el = target.childNodes[i];
             if (el.tagName == name.toUpperCase()) {
+                let props = getProps(el);
                 el.outerHTML = componentHTML;
+                el = target.childNodes[i];
+                evalElement(el, props);
             }
 
         }
@@ -205,7 +219,7 @@ var uni;
             if (IGNORE_INTERPRET.indexOf(child.tagName) == -1) {
                 try {
                     if (!child._didInit) {
-                        evalElement(child);
+                        evalElement(child, props);
                     }
                 } catch (e) {
                     console.error(e);

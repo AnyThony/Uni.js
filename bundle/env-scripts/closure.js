@@ -1,4 +1,14 @@
 async function renderInitComponents(target = null) {
+    function getProps(target) {
+        var props = {};
+        var nameList = target.getAttributeNames();
+        for (let i = 0; i < nameList.length; i++) {
+            let name = nameList[i];
+            props[name] = target.getAttribute(name);
+        }
+        return props;
+    }
+
     function childIndex(parent, child) {
         for (var i = 0; i < parent.children.length; i++) {
             if (parent.children[i] == child) {
@@ -20,13 +30,14 @@ async function renderInitComponents(target = null) {
     if (parent.imports && parent.imports.indexOf(tag.toLowerCase()) != -1) {
         var componentHTML = uni._rawComponents[tag.toLowerCase()]
         if (componentHTML) {
+            let props = getProps(target);
             var lenOld = childIndex(parent, target);
             target.outerHTML = componentHTML;
             parent.children[lenOld].outerHTML = parent.children[lenOld].innerHTML;
             for (var i = lenOld; i < parent.children.length; i++) {
                 var child = parent.children[i];
                 if (!child._didInit) {
-                    await uni._evalElement(parent.children[i]);
+                    await uni._evalElement(parent.children[i], props);
                 } else {
                     break;
                 }
