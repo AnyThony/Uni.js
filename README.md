@@ -20,7 +20,7 @@ Inside a project directory, a dev environment with hot reload can be started:
 
 # In-line Scripting
 
-Using Uni you can write inline-scripts that run with under a DOM element as context:
+Inline-scripts that run under a DOM element as context:
 
 Note: Uni assigns the method find as an alias for querySelector
 ```js
@@ -34,7 +34,7 @@ Note: Uni assigns the method find as an alias for querySelector
 
 # Initialization Events
 
-Uni runs scripts in the order of an execution tree
+Scripts run in the order of an execution tree
 
 Every DOM element runs itself first then recurses on its children.
 
@@ -65,7 +65,7 @@ Assigning a callback to onFullLoad will call it once every descendent's script i
   ...
 </div>
 ```
-Assigning a callback to onChildLoad will call it everytime a descendant's script is ran passing the descendant itself.
+Assigning a callback to onChildLoad will call it everytime a descendant's script is ran.
 
 # Components
 
@@ -83,7 +83,7 @@ The file name must be the desired component name. (In this case it's navbar.uni)
   </div>
 </template>
 ```
-To use a component this.imports must be declared with its name inside the parent element.
+To use a component, this.imports must be declared with its name inside the parent element.
 
 You can then declare a regular HTML element with its tagname:
 ```js
