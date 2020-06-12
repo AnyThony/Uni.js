@@ -1,31 +1,34 @@
 {
-  "name": "uni-cmd",
-  "version": "0.1.1",
-  "description": "",
-  "main": "./uni-cli/index.js",
-  "dependencies": {
-    "chokidar": "^3.4.0",
-    "dom-parser": "^0.1.6",
-    "figlet": "^1.4.0",
-    "html-webpack-plugin": "^4.3.0",
-    "live-server": "^1.2.1",
-    "ncp": "^2.0.0",
-    "path": "^0.12.7"
-  },
-  "keywords": [
-    "uni",
-    "UI",
-    "Framework",
-    "Frontend"
-  ],
-  "devDependencies": {
-    "concurrently": "^5.2.0"
-  },
-  "scripts": {},
-  "bin": {
-    "uni": "./uni-cli/index.js",
-    "unify": "./uni-cli/index.js"
-  },
-  "author": "Anthony Nguyen",
-  "license": "ISC"
+    "name": "uni-cmd",
+    "version": "0.2.1",
+    "description": "",
+    "main": "./uni-cli/index.js",
+    "dependencies": {
+        "cheerio": "^1.0.0-rc.3",
+        "chokidar": "^3.4.0",
+        "figlet": "^1.4.0",
+        "live-server": "^1.2.1",
+        "ncp": "^2.0.0",
+        "path": "^0.12.7"
+    },
+    "keywords": [
+        "uni",
+        "UI",
+        "Framework",
+        "Frontend"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/AnyThony/Uni.git"
+    },
+    "devDependencies": {
+        "concurrently": "^5.2.0"
+    },
+    "scripts": {},
+    "bin": {
+        "uni": "./uni-cli/index.js",
+        "unify": "./uni-cli/index.js"
+    },
+    "author": "Anthony Nguyen",
+    "license": "ISC"
 }

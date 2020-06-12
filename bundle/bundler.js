@@ -1,34 +1,33 @@
 /*
-* This script compiles all user scripts of app.uni
-* Any nested or dynamic components are processed on runtime by uniDOM.js
-*/
-const [,,...args] = process.argv;
+ * This script compiles all user scripts of app.uni
+ * Any nested or dynamic components are processed on runtime by uniDOM.js
+ */
+const [, , ...args] = process.argv;
 var root_dir;
+const cheerio = require('cheerio')
 const path = require('path');
-var DomParser = require('dom-parser');
 var inlineParser = require('./inline-parser.js')
-var parser = new DomParser();
 
 const fs = require('fs');
 
 if (args.length)
     root_dir = args[0];
-else 
+else
     root_dir = process.cwd();
-if (!fs.existsSync(path.join(root_dir, "src"))){
+if (!fs.existsSync(path.join(root_dir, "src"))) {
     root_dir = root_dir + '/../';
 }
 
 var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
-var dom = parser.parseFromString(htmlRaw);
+var $ = cheerio.load(htmlRaw);
 
-let indexBuffer = dom.rawHTML;
+let indexBuffer = htmlRaw;
 let scriptBuffer = inlineParser.makeScript(getComponentMap());
 
-function getComponentMap(){
+function getComponentMap() {
     var cMap = {}
     var files = fs.readdirSync(path.join(root_dir, "src/components"));
-    for (var i = 0; i < files.length; i++){
+    for (var i = 0; i < files.length; i++) {
         var fName = files[i].split(".")[0];
         var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
         cMap[fName.toLowerCase()] = cBuffer.toString()
@@ -36,9 +35,9 @@ function getComponentMap(){
     return cMap;
 }
 
-function addComponentsBuild(dir){
+function addComponentsBuild(dir) {
     var files = fs.readdirSync("src/components");
-    for (var i = 0; i < files.length; i++){
+    for (var i = 0; i < files.length; i++) {
         var buffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`)).toString();
         //buffer = parser.parseFromString(buffer).getElementsByTagName("template")[0].innerHTML;
         fs.writeFileSync(dir + "/" + files[i], buffer);
@@ -64,15 +63,14 @@ async function evalElement(target, context) {
         children: []
     }
     var closure;
-    var rootValue = target.childNodes.length ? target.childNodes[0].text : "";
+    var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
     var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
     var startI = closureI[0];
     var endI = closureI[1];
     var closureBuff = "";
     if (startI == -1 || endI == -1) {
         closure = "";
-    }
-    else {
+    } else {
         indexBuffer = indexBuffer.replace(rootValue.substring(startI, endI + 1), "");
         //console.log(rootValue.substring(startI, endI + 1))
         closure = rootValue.substring(startI + 1, endI);
@@ -81,7 +79,7 @@ async function evalElement(target, context) {
     execTree.closure = closure;
     for (var i = 0; i < target.childNodes.length; i++) {
         var child = target.childNodes[i];
-        if (child.nodeType == 1) {
+        if (child.type == "tag") {
             //console.log('child', child)
             var execChild = await evalElement(child, context + `.childNodes[${i}]`)
             if (execChild)
@@ -90,27 +88,28 @@ async function evalElement(target, context) {
     }
     return execTree;
 }
-async function main(){
-    var execTree = await evalElement(dom.getElementsByTagName("body")[0], "document.body");
+async function main() {
+    console.log($('body'))
+    var execTree = await evalElement($('body')[0], "document.body");
     console.log(execTree);
     if (!fs.existsSync(path.join(root_dir, "./build")))
-        fs.mkdirSync( path.join(root_dir, "./build")) ;
+        fs.mkdirSync(path.join(root_dir, "./build"));
     /*if (!fs.existsSync("./build/components"))
         fs.mkdirSync("./build/components");
     addComponentsBuild("./build/components")*/
 
     scriptBuffer += `var execTree = ${JSON.stringify(execTree)};` + inlineParser.postScript();
 
-    fs.writeFileSync( path.join(root_dir, "./build/main.js"), scriptBuffer );
-    fs.writeFileSync( path.join(root_dir, "./build/index.html"), indexBuffer );
+    fs.writeFileSync(path.join(root_dir, "./build/main.js"), scriptBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/index.html"), indexBuffer);
 
-    var uniBuffer = fs.readFileSync( __dirname + '/../dist/uniDOM.js' );
+    var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
 
-    fs.writeFileSync( path.join(root_dir, "./build/uniDOM.js"), uniBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/uniDOM.js"), uniBuffer);
 
-    var styleBuffer = fs.readFileSync( path.join(root_dir, "./src/styles.css"));
+    var styleBuffer = fs.readFileSync(path.join(root_dir, "./src/styles.css"));
 
-    fs.writeFileSync( path.join(root_dir, "./build/styles.css"), styleBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/styles.css"), styleBuffer);
 
 }
 main();

@@ -27,8 +27,9 @@ async function renderInitComponents(target = null) {
     }
 
     var parent = target.parentElement;
-    if (parent.imports && parent.imports.indexOf(tag.toLowerCase()) != -1) {
-        var componentHTML = uni._rawComponents[tag.toLowerCase()]
+    if (parent.imports &&
+        parent.imports.map(c => c.toUpperCase()).indexOf(tag) != -1) {
+        var componentHTML = uni._rawComponents[tag.toLowerCase()];
         if (componentHTML) {
             let props = getProps(target);
             var lenOld = childIndex(parent, target);
