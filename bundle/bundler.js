@@ -21,8 +21,19 @@ if (!fs.existsSync(path.join(root_dir, "src"))) {
 var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
 var $ = cheerio.load(htmlRaw);
 
-let indexBuffer = htmlRaw;
+let indexBuffer = $.html();
 let scriptBuffer = inlineParser.makeScript(getComponentMap());
+
+function unescapeHtml(unsafe) {
+    return unsafe
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#039;/g, "'");
+}
+
+indexBuffer = unescapeHtml(indexBuffer);
 
 function getComponentMap() {
     var cMap = {}
@@ -71,7 +82,9 @@ async function evalElement(target, context) {
     if (startI == -1 || endI == -1) {
         closure = "";
     } else {
+        console.log(rootValue.substring(startI, endI + 1));
         indexBuffer = indexBuffer.replace(rootValue.substring(startI, endI + 1), "");
+        console.log(indexBuffer);
         //console.log(rootValue.substring(startI, endI + 1))
         closure = rootValue.substring(startI + 1, endI);
         closureBuff = await getClosureBuff(closure, context);
@@ -89,9 +102,7 @@ async function evalElement(target, context) {
     return execTree;
 }
 async function main() {
-    console.log($('body'))
     var execTree = await evalElement($('body')[0], "document.body");
-    console.log(execTree);
     if (!fs.existsSync(path.join(root_dir, "./build")))
         fs.mkdirSync(path.join(root_dir, "./build"));
     /*if (!fs.existsSync("./build/components"))

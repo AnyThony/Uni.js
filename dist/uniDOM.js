@@ -11,11 +11,13 @@ var uni;
     const parser = new DOMParser();
     uni = {
         getComponentHTML: async(target, name) => {
+
             var existingImport = uni._rawComponents && uni._rawComponents[name];
             var response;
             if (existingImport) {
                 response = existingImport;
             } else {
+                console.log("getComHTML", [name, uni._rawComponents])
                 var path = `/components/${name}.uni`;
                 response = await fetch(path);
                 if (!response.ok) {

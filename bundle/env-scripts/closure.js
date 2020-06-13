@@ -54,7 +54,7 @@ async function renderInitComponents(target = null) {
 
 // ran before every closure
 function preClosure() {
-    this.addComponent = (name) => uni.addComponent(name, this);
+    this.addComponent = (name, props = {}) => uni.addComponent(name, this, props);
     this._rawImports = {};
     this._stateChangeListens = [];
     this.find = this.querySelector;
@@ -96,10 +96,12 @@ function preClosure() {
             this.parentElement.setState(newState);
         }
     };
+
 }
 
 // ran after every closure
 function postClosure() {
+    this._didInit = true;
     /*if (this.parentElement) {
         var par = this.parentElement;
         if (par.onChildLoad)
