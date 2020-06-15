@@ -6,7 +6,7 @@ const path = require('path');
 const chokidar = require('chokidar');
 const { execSync } = require('child_process');
 var ncp = require('ncp').ncp;
- 
+
 ncp.limit = 16;
 
 function init(args) {
@@ -15,10 +15,10 @@ function init(args) {
         horizontalLayout: 'default',
         verticalLayout: 'default'
     }));
-    
-    console.log(`ver. ${pkg.version}`)    
-    
-    if (args.length < 2){
+
+    console.log(`ver. ${pkg.version}`)
+
+    if (args.length < 2) {
         return console.error("Failed: Missing project name")
     }
 
@@ -32,9 +32,9 @@ function init(args) {
     if (!fs.existsSync(dest))
         fs.mkdirSync(dest);
 
-    ncp(__dirname + '/res/src', dest, function (err) {
+    ncp(__dirname + '/res/src', dest, function(err) {
         if (err) {
-          return console.error(err);
+            return console.error(err);
         }
         resPkg.name = projectName;
         resPkg.scripts.dev = `concurrently --kill-others \"uni build && live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" \"uni watch\"`;
@@ -46,13 +46,13 @@ function init(args) {
     });
 }
 
-function build(){
+function build() {
     console.log("Bundling...");
     execSync(`node ${__dirname + '/../bundle/bundler.js'} ${cwd}`);
     console.log("Done.");
 }
 
-function serve(args){
+function serve(args) {
     console.log("Bundling...");
     execSync(`concurrently --kill-others 
     \"live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" 
@@ -60,10 +60,17 @@ function serve(args){
     console.log("Done.");
 }
 
-function watch(args){
+function watch(args) {
+    var timeout = 600;
+    //timeout is a temp fix since multiple changes at once makes watch build multiple times
+    var isBuilding = false;
     chokidar.watch(cwd + '/src').on('change', (event, path) => {
-        build();
+        if (!isBuilding) {
+            build();
+            isBuilding = true;
+            setTimeout(() => { isBuilding = false }, timeout);
+        }
     });
 }
 
-module.exports = {init, build, watch}
+module.exports = { init, build, watch }
