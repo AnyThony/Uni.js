@@ -6,8 +6,8 @@ const [, , ...args] = process.argv;
 var root_dir;
 const cheerio = require('cheerio')
 const path = require('path');
-var inlineParser = require('./inline-parser.js')
-
+const inlineParser = require('./inline-parser.js')
+const util = require('./util.js');
 const fs = require('fs');
 
 if (args.length)
@@ -111,16 +111,15 @@ async function main() {
 
     scriptBuffer += `var execTree = ${JSON.stringify(execTree)};` + inlineParser.postScript();
 
-    fs.writeFileSync(path.join(root_dir, "./build/main.js"), scriptBuffer);
-    fs.writeFileSync(path.join(root_dir, "./build/index.html"), indexBuffer);
-
     var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
 
     fs.writeFileSync(path.join(root_dir, "./build/uniDOM.js"), uniBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/main.js"), scriptBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/index.html"), indexBuffer);
+    util.copyToBuild(path.join(root_dir, "./src"), path.join(root_dir, "./build"));
+    /*var styleBuffer = fs.readFileSync(path.join(root_dir, "./src/styles.css"));
 
-    var styleBuffer = fs.readFileSync(path.join(root_dir, "./src/styles.css"));
-
-    fs.writeFileSync(path.join(root_dir, "./build/styles.css"), styleBuffer);
+    fs.writeFileSync(path.join(root_dir, "./build/styles.css"), styleBuffer);*/
 
 }
 main();
