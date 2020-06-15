@@ -102,17 +102,6 @@ function preClosure() {
 // ran after every closure
 function postClosure() {
     this._didInit = true;
-    /*if (this.parentElement) {
-        var par = this.parentElement;
-        if (par.onChildLoad)
-            par.onChildLoad(this);
-        if (par.onFullLoad &&
-            !par.onFullLoad._ran &&
-            par.children[par.children.length - 1] == this) {
-            par.onFullLoad();
-            par.onFullLoad._ran = true;
-        }
-    }*/
 }
 module.exports = {
     preClosure: preClosure,

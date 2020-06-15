@@ -105,9 +105,6 @@ async function main() {
     var execTree = await evalElement($('body')[0], "document.body");
     if (!fs.existsSync(path.join(root_dir, "./build")))
         fs.mkdirSync(path.join(root_dir, "./build"));
-    /*if (!fs.existsSync("./build/components"))
-        fs.mkdirSync("./build/components");
-    addComponentsBuild("./build/components")*/
 
     scriptBuffer += `var execTree = ${JSON.stringify(execTree)};` + inlineParser.postScript();
 
@@ -117,9 +114,6 @@ async function main() {
     fs.writeFileSync(path.join(root_dir, "./build/main.js"), scriptBuffer);
     fs.writeFileSync(path.join(root_dir, "./build/index.html"), indexBuffer);
     util.copyToBuild(path.join(root_dir, "./src"), path.join(root_dir, "./build"));
-    /*var styleBuffer = fs.readFileSync(path.join(root_dir, "./src/styles.css"));
-
-    fs.writeFileSync(path.join(root_dir, "./build/styles.css"), styleBuffer);*/
 
 }
 main();
