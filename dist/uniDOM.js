@@ -17,7 +17,6 @@ var uni;
             if (existingImport) {
                 response = existingImport;
             } else {
-                console.log("getComHTML", [name, uni._rawComponents])
                 var path = `/components/${name}.uni`;
                 response = await fetch(path);
                 if (!response.ok) {

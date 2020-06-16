@@ -38,9 +38,10 @@ function init(args) {
         }
         resPkg.name = projectName;
         resPkg.scripts.dev = `concurrently --kill-others \"uni build && live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" \"uni watch\"`;
+        resPkg.dependencies["uni-cmd"] = `^${pkg.version}`;
         fs.writeFileSync(root + "/package.json", JSON.stringify(resPkg, null, 2));
         console.log(`Project dir ${projectName} created`);
-        console.log('Initializing npm...');
+        console.log('Installing packages...');
         execSync(`cd ${projectName} && npm install`);
         console.log('Done.');
     });
