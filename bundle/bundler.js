@@ -24,9 +24,9 @@ if (!fs.existsSync(path.join(root_dir, "src"))) {
 var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
 var $ = cheerio.load(htmlRaw);
 
-//indexBuffer => index.html
-//scriptBuffer => main.js
-var indexBuffer = util.unescapeHtml($.html()); // cheerio uses escaped characters
+//indexBuffer written to index.html
+//scriptBuffer written to main.js
+var indexBuffer = util.unescapeHtml($.html()); // since cheerio returns escaped characters
 var scriptBuffer = closureData.makeScript(util.getComponentMap(root_dir));
 
 // creates an execution tree in the order of the DOM tree
@@ -75,12 +75,14 @@ async function main() {
         fs.mkdirSync(buildPath);
 
     scriptBuffer += `const execTree = ${JSON.stringify(execTree)};` + closureData.postScript();
-
+    // a copy of uniDOM.js
     var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
 
+    // writes index, main and uniDOM to build, as well as external resources if exists
     fs.writeFileSync(path.join(buildPath, "uniDOM.js"), uniBuffer);
     fs.writeFileSync(path.join(buildPath, "main.js"), scriptBuffer);
     fs.writeFileSync(path.join(buildPath, "index.html"), indexBuffer);
+    // copy any other ext resource
     util.copyToBuild(path.join(root_dir, "./src"), path.join(root_dir, "./build"));
 }
 main();

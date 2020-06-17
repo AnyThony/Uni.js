@@ -2,7 +2,8 @@
 * This module contains all functions to be used in main.js and for evaluating closures
 */
 
-// this evaluates static components in the entry point app.uni only
+// this evaluates static components in the entry point (app.uni) only
+// gets called at the end of main.js
 async function initStaticComponents(target = null) {
     
     // gets the props of a static component via html attributes
@@ -103,14 +104,14 @@ function postScript() {
         if (context.onFullLoad){
             context.onFullLoad();
         }
-        return context
+        return context;
     }
     evalExecTree(execTree);
     (${initStaticComponents.toString()})();
     `
 }
 
-var makeClosure = (closure, context) => {
+function makeClosure(closure, context) {
     return `
         runClosure(\`${closure}\`, ${context});
     `

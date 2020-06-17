@@ -24,6 +24,8 @@ function copyToBuild(src, build) {
     }
     ncp(src, build, options, err => {
         if (err) throw err;
+        // the component folder is copied but there are no ncp filters to avoid this
+        // a temp work around to just delete it right after
         var componentDir = path.join(build, "/components");
         if (fs.existsSync(componentDir)) {
             fs.rmdirSync(componentDir);
@@ -33,7 +35,7 @@ function copyToBuild(src, build) {
 
 function getComponentMap(root_dir) {
     /*
-    *   Stores all components into an object
+    *   Stores all components into an object such that:
     *   Key: Component Name
     *   Value: Raw Component Buffer
     */
