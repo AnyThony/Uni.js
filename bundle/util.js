@@ -3,6 +3,15 @@ const fs = require('fs');
 const path = require('path');
 ncp.limit = 16;
 
+function unescapeHtml(unsafe) {
+    return unsafe
+        .replace(/&amp;/g, "&")
+        .replace(/&lt;/g, "<")
+        .replace(/&gt;/g, ">")
+        .replace(/&quot;/g, "\"")
+        .replace(/&#039;/g, "'");
+}
+
 function copyToBuild(src, build) {
     /*
      *   Takes path src and recursivly copies all files to the new build location
@@ -22,4 +31,20 @@ function copyToBuild(src, build) {
     })
 }
 
-module.exports = { copyToBuild }
+function getComponentMap(root_dir) {
+    /*
+    *   Stores all components into an object
+    *   Key: Component Name
+    *   Value: Raw Component Buffer
+    */
+    var cMap = {}
+    var files = fs.readdirSync(path.join(root_dir, "src/components"));
+    for (var i = 0; i < files.length; i++) {
+        var fName = files[i].split(".")[0]; //filename
+        var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
+        cMap[fName.toLowerCase()] = cBuffer.toString()
+    }
+    return cMap;
+}
+
+module.exports = { copyToBuild, unescapeHtml, getComponentMap }

@@ -1,8 +1,7 @@
-var closureData = require('./env-scripts/closure.js');
 const TOK_START = "{";
 const TOK_END = "}";
 
-// parse the raw data for code
+// scan the raw data for in-line code
 function scanForClosure(data) {
     var left = data && data[0] == TOK_START ? 0 : -1;
     var right = -1;
@@ -23,59 +22,6 @@ function scanForClosure(data) {
     return [left, right]
 }
 
-function makeScript(cMap) {
-    //(${closureData.uniLibrary.toString()})();
-    return `
-        uni._rawComponents = ${JSON.stringify(cMap)};
-
-        function runClosure(closure, context){
-            var raw = \`
-            (${closureData.preClosure.toString()}).call(this);
-            \`+closure+\` 
-            return {
-                onFullLoad: typeof this.onFullLoad === 'function' ? this.onFullLoad : null,
-                onChildLoad: typeof this.onChildLoad === 'function' ? this.onChildLoad : null,
-                imports: typeof this.imports === 'object' ? this.imports : null
-            }\`
-            var _wrapContext = uni._getWrapContext(context)
-            var _cl = Function(raw);
-            _cl.call(_wrapContext);
-            return _cl
-        }
-    `
-}
-
-function postScript() {
-    return `
-    function evalExecTree(tree){
-        var children = tree.children;
-        var context = Function('return '+tree.context)();
-        runClosure(tree.closure, context);
-        for (var i = 0; i < children.length; i++){
-            var child = evalExecTree(children[i]);
-            if (context.onChildload){
-                context.onChildLoad(child);
-            }
-        }
-        if (context.onFullLoad){
-            context.onFullLoad();
-        }
-        return context
-    }
-    evalExecTree(execTree);
-    (${closureData.renderInitComponents.toString()})();
-    `
-}
-
-var makeClosure = (closure, context) => {
-    return `
-        runClosure(\`${closure}\`, ${context});
-    `
-}
-
 module.exports = {
-    scanForClosure: scanForClosure,
-    makeClosure: makeClosure,
-    makeScript: makeScript,
-    postScript: postScript
+    scanForClosure
 }

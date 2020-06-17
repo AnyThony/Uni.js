@@ -1,19 +1,22 @@
 /*
  * This script compiles all user scripts of app.uni
- * Any nested or dynamic components are processed on runtime by uniDOM.js
+ * Any nested/dynamic components are processed on runtime using uniDOM.js
  */
 const [, , ...args] = process.argv;
-var root_dir;
 const cheerio = require('cheerio')
 const path = require('path');
 const inlineParser = require('./inline-parser.js')
+const closureData = require('./env-scripts/closure')
 const util = require('./util.js');
 const fs = require('fs');
+var root_dir;
 
 if (args.length)
     root_dir = args[0];
 else
     root_dir = process.cwd();
+
+// handle case if ran inside the src folder
 if (!fs.existsSync(path.join(root_dir, "src"))) {
     root_dir = root_dir + '/../';
 }
@@ -21,53 +24,14 @@ if (!fs.existsSync(path.join(root_dir, "src"))) {
 var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
 var $ = cheerio.load(htmlRaw);
 
-let indexBuffer = $.html();
-let scriptBuffer = inlineParser.makeScript(getComponentMap());
+//indexBuffer => index.html
+//scriptBuffer => main.js
+var indexBuffer = util.unescapeHtml($.html()); // cheerio uses escaped characters
+var scriptBuffer = closureData.makeScript(util.getComponentMap(root_dir));
 
-function unescapeHtml(unsafe) {
-    return unsafe
-        .replace(/&amp;/g, "&")
-        .replace(/&lt;/g, "<")
-        .replace(/&gt;/g, ">")
-        .replace(/&quot;/g, "\"")
-        .replace(/&#039;/g, "'");
-}
-
-indexBuffer = unescapeHtml(indexBuffer);
-
-function getComponentMap() {
-    var cMap = {}
-    var files = fs.readdirSync(path.join(root_dir, "src/components"));
-    for (var i = 0; i < files.length; i++) {
-        var fName = files[i].split(".")[0];
-        var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
-        cMap[fName.toLowerCase()] = cBuffer.toString()
-    }
-    return cMap;
-}
-
-function addComponentsBuild(dir) {
-    var files = fs.readdirSync("src/components");
-    for (var i = 0; i < files.length; i++) {
-        var buffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`)).toString();
-        //buffer = parser.parseFromString(buffer).getElementsByTagName("template")[0].innerHTML;
-        fs.writeFileSync(dir + "/" + files[i], buffer);
-    }
-}
-
-// setup environment and run a closure inside target context
-async function getClosureBuff(closure, context) {
-    var result = {
-        onFullLoad: null,
-        onChildLoad: null
-    }
-
-    return inlineParser.makeClosure(closure, context);
-}
-
-// initially for being called on document body, evaluates js on
-// first node if found, recurses on children
-async function evalElement(target, context) {
+// creates an execution tree in the order of the DOM tree
+// in-line scripts are parsed and stored in the corresponding tree node as a closure
+async function createExecTree(target, context) {
     var execTree = {
         context: context,
         closure: "",
@@ -75,45 +39,48 @@ async function evalElement(target, context) {
     }
     var closure;
     var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
+    // start and end index of in-line scripts
     var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
     var startI = closureI[0];
     var endI = closureI[1];
     var closureBuff = "";
+
     if (startI == -1 || endI == -1) {
         closure = "";
     } else {
-        console.log(rootValue.substring(startI, endI + 1));
+        // remove the script
         indexBuffer = indexBuffer.replace(rootValue.substring(startI, endI + 1), "");
-        console.log(indexBuffer);
-        //console.log(rootValue.substring(startI, endI + 1))
         closure = rootValue.substring(startI + 1, endI);
-        closureBuff = await getClosureBuff(closure, context);
+        closureBuff = closureData.makeClosure(closure, context);
     }
+    // if the script is empty or DNE we still setup an empty closure to bind env properties in closure.js
     execTree.closure = closure;
-    for (var i = 0; i < target.childNodes.length; i++) {
-        var child = target.childNodes[i];
+    for (let i = 0; i < target.childNodes.length; i++) {
+        let child = target.childNodes[i];
         if (child.type == "tag") {
-            //console.log('child', child)
-            var execChild = await evalElement(child, context + `.childNodes[${i}]`)
+            let execChild = await createExecTree(child, context + `.childNodes[${i}]`)
             if (execChild)
                 execTree.children.push(execChild);
         }
     }
     return execTree;
 }
-async function main() {
-    var execTree = await evalElement($('body')[0], "document.body");
-    if (!fs.existsSync(path.join(root_dir, "./build")))
-        fs.mkdirSync(path.join(root_dir, "./build"));
 
-    scriptBuffer += `var execTree = ${JSON.stringify(execTree)};` + inlineParser.postScript();
+async function main() {
+    //execution tree of document.body and descendants
+    var execTree = await createExecTree($('body')[0], "document.body");
+    var buildPath = path.join(root_dir, "./build");
+    
+    if (!fs.existsSync(buildPath))
+        fs.mkdirSync(buildPath);
+
+    scriptBuffer += `const execTree = ${JSON.stringify(execTree)};` + closureData.postScript();
 
     var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
 
-    fs.writeFileSync(path.join(root_dir, "./build/uniDOM.js"), uniBuffer);
-    fs.writeFileSync(path.join(root_dir, "./build/main.js"), scriptBuffer);
-    fs.writeFileSync(path.join(root_dir, "./build/index.html"), indexBuffer);
+    fs.writeFileSync(path.join(buildPath, "uniDOM.js"), uniBuffer);
+    fs.writeFileSync(path.join(buildPath, "main.js"), scriptBuffer);
+    fs.writeFileSync(path.join(buildPath, "index.html"), indexBuffer);
     util.copyToBuild(path.join(root_dir, "./src"), path.join(root_dir, "./build"));
-
 }
 main();

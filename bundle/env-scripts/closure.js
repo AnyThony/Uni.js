@@ -1,4 +1,11 @@
-async function renderInitComponents(target = null) {
+/*
+* This module contains all functions to be used in main.js and for evaluating closures
+*/
+
+// this evaluates static components in the entry point app.uni only
+async function initStaticComponents(target = null) {
+    
+    // gets the props of a static component via html attributes
     function getProps(target) {
         var props = {};
         var nameList = target.getAttributeNames();
@@ -9,6 +16,7 @@ async function renderInitComponents(target = null) {
         return props;
     }
 
+    // find the index of a given child
     function childIndex(parent, child) {
         for (var i = 0; i < parent.children.length; i++) {
             if (parent.children[i] == child) {
@@ -17,94 +25,100 @@ async function renderInitComponents(target = null) {
         }
         return -1;
     };
-
-    if (!target)
+    
+    if (!target){
         target = document.body
+    }
     var tag = target.tagName;
-
+    var parent = target.parentElement;
+    var componentHTML = uni._rawComponents[tag.toLowerCase()];
     if (uni._ignore_interpret.indexOf(tag.toUpperCase()) != -1) {
         return;
     }
-
-    var parent = target.parentElement;
+    //if target is a valid component and its parent has imported it
     if (parent.imports &&
+        componentHTML &&
         parent.imports.map(c => c.toUpperCase()).indexOf(tag) != -1) {
-        var componentHTML = uni._rawComponents[tag.toLowerCase()];
-        if (componentHTML) {
-            let props = getProps(target);
-            var lenOld = childIndex(parent, target);
-            target.outerHTML = componentHTML;
-            parent.children[lenOld].outerHTML = parent.children[lenOld].innerHTML;
-            for (var i = lenOld; i < parent.children.length; i++) {
-                var child = parent.children[i];
-                if (!child._didInit) {
-                    await uni._evalElement(parent.children[i], props);
-                } else {
-                    break;
-                }
+
+        var props = getProps(target);
+        var targetIndex = childIndex(parent, target);
+        target.outerHTML = componentHTML;
+        // components are wrapped in <template> tag so we need to do this
+        parent.children[targetIndex].outerHTML = parent.children[targetIndex].innerHTML;
+        // the component can unload multiple elements so all must be evaluated
+        for (let i = targetIndex; i < parent.children.length; i++) {
+            let child = parent.children[i];
+            if (!child._didInit) {
+                await uni._evalElement(parent.children[i], props);
+            }
+            else {
+                break;
             }
         }
     }
-
+    // recurse on children
     for (var j = 0; j < target.children.length; j++) {
-        await renderInitComponents(target.children[j]);
+        await initStaticComponents(target.children[j]);
     }
-
 }
 
-// ran before every closure
-function preClosure() {
-    this.addComponent = (name, props = {}) => uni.addComponent(name, this, props);
-    this._rawImports = {};
-    this._stateChangeListens = [];
-    this.find = this.querySelector;
-    this.bindState = function(cb) {
-        if (this.state) {
-            this._stateChangeListens.push(cb);
+//start of the main.js script
+function makeScript(cMap) {
+    // makes use of the uniDOM.js library in dist
+    return `
+        uni._rawComponents = ${JSON.stringify(cMap)};
 
-            cb(this.state);
-        } else if (this != document.body) {
-            this.parentElement.bindState(cb);
+        function runClosure(closure, context){
+            var raw = \`
+            uni._preClosure.call(this);
+            \`
+            +closure+\` 
+            return {
+                onFullLoad: typeof this.onFullLoad === 'function' ? this.onFullLoad : null,
+                onChildLoad: typeof this.onChildLoad === 'function' ? this.onChildLoad : null,
+                imports: typeof this.imports === 'object' ? this.imports : null
+            }\`
+            var _cl = Function(raw);
+            _cl.call(context);
+            return _cl
         }
-    };
-    this.setState = function(newState) {
+    `
+    // runClosure evaluates a closure with the given context
+    // preClosure is called first binding the necessary properties
+}
 
-        var updated = false;
-        if (this.state) {
-
-            for (var key in newState) {
-                if (newState.hasOwnProperty(key)) {
-                    var val = newState[key];
-                    if (this.state[key] !== undefined) {
-
-                        if (!updated) {
-                            this._stateChangeListens.forEach(f => {
-                                f(newState);
-                            });
-                            updated = true;
-                        }
-                        this.state[key] = val;
-
-                        delete newState[key];
-                    }
-                }
+//end of the main.js script
+function postScript() {
+    return `
+    function evalExecTree(tree){
+        var children = tree.children;
+        var context = Function('return '+tree.context)();
+        runClosure(tree.closure, context);
+        for (var i = 0; i < children.length; i++){
+            var child = evalExecTree(children[i]);
+            if (context.onChildload){
+                context.onChildLoad(child);
             }
-            if (Object.keys(newState).length && this != document.body) {
-                this.parentElement.setState(newState);
-            }
-        } else if (this != document.body && this.parentElement) {
-            this.parentElement.setState(newState);
         }
-    };
-
+        if (context.onFullLoad){
+            context.onFullLoad();
+        }
+        return context
+    }
+    evalExecTree(execTree);
+    (${initStaticComponents.toString()})();
+    `
 }
 
-// ran after every closure
-function postClosure() {
-    this._didInit = true;
+var makeClosure = (closure, context) => {
+    return `
+        runClosure(\`${closure}\`, ${context});
+    `
 }
+
 module.exports = {
-    preClosure: preClosure,
-    postClosure: postClosure,
-    renderInitComponents: renderInitComponents
+    initStaticComponents,
+    makeScript,
+    postScript,
+    makeClosure
 }
