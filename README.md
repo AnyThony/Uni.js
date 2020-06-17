@@ -15,7 +15,7 @@ Uni is available to install as an npm package:
 A new project can then be created with the init command:
 ```uni init Project_Name```
 
-Inside a project directory, a dev environment with hot reload can be started:
+Inside a project directory, a dev environment with live reload can be started:
 ```npm run dev```
 
 # In-line Scripting
