@@ -4,7 +4,7 @@ When building, the bundler script is ran.
 
 It is responsible for translating Uni apps into native HTML and Javascript.
 
-Note that only scripts in app.uni are pre-translated, components are stored in tables and are to be handled upon runtime.
+Note that only app.uni in-line scripts are pre-translated, components are stored in tables and are to be loaded upon runtime.
 
 ![Bundling](https://i.imgur.com/txPkD51.png)
 
