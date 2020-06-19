@@ -33,20 +33,4 @@ function copyToBuild(src, build) {
     })
 }
 
-function getComponentMap(root_dir) {
-    /*
-    *   Stores all components into an object such that:
-    *   Key: Component Name
-    *   Value: Raw Component Buffer
-    */
-    var cMap = {}
-    var files = fs.readdirSync(path.join(root_dir, "src/components"));
-    for (var i = 0; i < files.length; i++) {
-        var fName = files[i].split(".")[0]; //filename
-        var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
-        cMap[fName.toLowerCase()] = cBuffer.toString()
-    }
-    return cMap;
-}
-
-module.exports = { copyToBuild, unescapeHtml, getComponentMap }
+module.exports = { copyToBuild, unescapeHtml }

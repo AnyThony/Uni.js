@@ -8,52 +8,36 @@ var uni;
 
     //exports
     uni = {
-        getComponentHTML,
         addComponent,
-        _evalElement: evalElement,
         _ignore_interpret: IGNORE_INTERPRET,
-        _preClosure: preClosure
+        _preClosure: preClosure,
+        _evalExecTree: evalExecTree
     };
 
-    // lookup component table and get its uni html
-    async function getComponentHTML(name){
-        var existingImport = uni._rawComponents && uni._rawComponents[name];
-        var response;
-
-        if (existingImport) {
-            response = existingImport;
-        } 
-        else {
-            var path = `/components/${name}.uni`;
-            response = await fetch(path);
-            if (!response.ok) {
-                console.error(`${path} failed to load. It may have been moved or deleted.`);
-                return false;
-            }
-            response = await response.text();
-        }
-        var responseDOM = parser.parseFromString(response, "text/html");
-        return responseDOM.getElementsByTagName("template")[0].innerHTML;
-    }
-
     // loads a component as a child of parent
-    async function addComponent(name, parent, props){
-        var componentHTML = await uni.getComponentHTML(name);
+    function addComponent(name, parent, props){
+        var component = uni._rawComponents[name];
+        var componentHTML = component && parser.parseFromString(component.srcBuffer, "text/html");
+        var componentExec = component && component.execTree;
+        if (!component) return;
+        componentHTML = componentHTML.getElementsByTagName("template")[0].innerHTML;
         // keep track of the initial num of childs
         var numChildOld = parent.children.length;
-        var component = document.createElement('DIV');
-        component.innerHTML = componentHTML;
-        for (let i = 0; i < component.children.length; i++) {
-            parent.appendChild(component.children[i]);
+        var mockComponent = document.createElement('DIV');
+        mockComponent.innerHTML = componentHTML;
+        for (let j = 0; j < mockComponent.children.length; j++) {
+            parent.appendChild(mockComponent.children[j].cloneNode(true));
         }
         // component is appended
         // components can have multiple roots so they all need to be evaluated
-        // numChildOld is the index of the first new component root so iteration starts there
+        // numChildOld is the index of the appended component 1st root so iteration starts there
         var children = parent.children;
-        for (let i = numChildOld; i < children.length; i++) {
+        for (let i = numChildOld; i < numChildOld + componentExec.children.length; i++) {
             if (!children[i]._didInit) {
-                await evalElement(children[i], props)
+                //componentExec.children[i - numChildOld].context = children[i];
+                uni._evalExecTree(componentExec.children[i - numChildOld], children[i], props);
             }
+            else break;
         }
     }
 
@@ -69,17 +53,22 @@ var uni;
     }
 
     // search children of target for component tags then load if exists
-    async function registerComponent(target, name) {
-        var componentHTML = await uni.getComponentHTML(name);
-        if (!componentHTML) return;
+    function registerComponent(target, name) {
+        var component = uni._rawComponents[name];
+        var componentHTML = component && parser.parseFromString(component.srcBuffer, "text/html");;
+        var componentExec = component && component.execTree;
+        if (!component) return;
 
-        for (var i = 0; i < target.childNodes.length; i++) {
-            var el = target.childNodes[i];
+        for (let i = 0; i < target.children.length; i++) {
+            var el = target.children[i];
             if (el.tagName == name.toUpperCase()) {
                 let props = getProps(el);
-                el.outerHTML = componentHTML;
-                el = target.childNodes[i];
-                evalElement(el, props);
+                el.outerHTML = componentHTML.getElementsByTagName("template")[0].innerHTML;
+                
+                for (let j = i; j < i + componentExec.children.length; j++){
+                    el = target.children[j];
+                    evalExecTree(componentExec.children[j - i], el, props);
+                }
             }
         }
     }
@@ -135,86 +124,41 @@ var uni;
         };
     }
 
-    // setup environment and run a closure inside target context
-    async function evalClosure(target, closure, props) {
-        target._didInit = true;
-        target.props = props;
-        // same as closure.js used by the bundler
-        var _cl = Function(` 
-            (${preClosure.toString()}).call(this);
-            ${closure} 
-            return {
-                onFullLoad: this.onFullLoad || null,
-                onChildLoad: this.onChildLoad || null,
-                imports: this.imports || null
-            };
-        `);
-        var _context = target
-        var evaluated = _cl.call(_context);
-        if (evaluated.imports) {
-            var imports = evaluated.imports;
-            for (var i = 0; i < imports.length; i++) {
-                await registerComponent(target, imports[i]);
+    function runClosure(closure, context){
+        //console.log(closure, context)
+        var raw = `
+        uni._preClosure.call(this);
+        `+closure+` 
+        return {
+            onFullLoad: typeof this.onFullLoad === 'function' ? this.onFullLoad : null,
+            onChildLoad: typeof this.onChildLoad === 'function' ? this.onChildLoad : null,
+            imports: typeof this.imports === 'object' ? this.imports : null
+        }`
+        var _cl = Function(raw).call(context);
+        if (_cl.imports) {
+            var imports = _cl.imports;
+            for (let i = 0; i < imports.length; i++) {
+                registerComponent(context, imports[i]);
             }
         }
-        return evaluated;
+        return _cl
     }
 
-    // parse the node for closure
-    function scanForClosure(data, type) {
-        var TOK_START = type;
-        var left = data && data[0] == TOK_START ? 0 : -1;
-        var right = -1;
-        for (var i = 0; i < data.length - 1; i++) {
-            if (data[i] == "\\") {
-                continue;
-            }
-            if (left == -1 && data[i + 1] == TOK_START) {
-                left = i + 1;
-            } else if (data[i + 1] == TOK_END) {
-                right = i + 1;
+    function evalExecTree(tree, context, props = {}){
+        var children = tree.children;
+        //console.log(tree, context);
+        context.props = props;
+        runClosure(tree.closure, context);
+        context._didInit = true;
+        for (var i = 0; i < children.length; i++){
+            var child = evalExecTree(children[i], context.childNodes[children[i].context], props);
+            if (context.onChildLoad){
+                context.onChildLoad(child);
             }
         }
-        return [left, right]
-    }
-
-    // runs in-line closures, recurses on children
-    async function evalElement(target, props = {}) {
-        // first node value, assuming it is text
-        var rootValue = (target.childNodes.length && target.childNodes[0].nodeValue) || '';
-        
-        var closureI = rootValue && rootValue.trim() ? scanForClosure(rootValue, TOK_START_JS) : [-1, -1]
-        var startI = closureI[0];
-        var endI = closureI[1];
-        var evaluated = {};
-        var closure = rootValue.substring(startI + 1, endI)
-        if (startI == -1 || endI == -1) {
-            closure = "";
-        } else {
-            // remove the script
-            target.childNodes[0].nodeValue = rootValue.replace(
-                rootValue.substring(startI, endI + 2), "");
+        if (context.onFullLoad){
+            context.onFullLoad();
         }
-        // if the script is empty or DNE we still setup an empty closure to bind env properties in closure.js
-        evaluated = await evalClosure(target, closure, props);
-
-        for (var i = 0; i < target.children.length; i++) {
-            var child = target.children[i];
-            if (IGNORE_INTERPRET.indexOf(child.tagName) == -1) {
-                try {
-                    if (!child._didInit) {
-                        evalElement(child, props);
-                    }
-                } catch (e) {
-                    console.error(e);
-                }
-                if (evaluated.onChildLoad) {
-                    evaluated.onChildLoad(child);
-                }
-            }
-        }
-        if (evaluated.onFullLoad) {
-            evaluated.onFullLoad();
-        }
+        return context;
     }
 })()

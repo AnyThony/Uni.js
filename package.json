@@ -1,7 +1,7 @@
 {
     "name": "uni-cmd",
-    "version": "0.2.4",
-    "description": "",
+    "version": "0.3.0",
+    "description": "Command Line Interface for Uni.js",
     "main": "./uni-cli/index.js",
     "dependencies": {
         "cheerio": "^1.0.0-rc.3",
@@ -30,5 +30,5 @@
         "unify": "./uni-cli/index.js"
     },
     "author": "Anthony Nguyen",
-    "license": "ISC"
+    "license": "MIT"
 }

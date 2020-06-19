@@ -3,10 +3,10 @@
  * Any nested/dynamic components are processed on runtime using uniDOM.js
  */
 const [, , ...args] = process.argv;
-const cheerio = require('cheerio')
+const cheerio = require('cheerio');
 const path = require('path');
-const inlineParser = require('./inline-parser.js')
-const closureData = require('./env-scripts/closure')
+const inlineParser = require('./inline-parser.js');
+const closureData = require('./env-scripts/closure');
 const util = require('./util.js');
 const fs = require('fs');
 var root_dir;
@@ -22,53 +22,83 @@ if (!fs.existsSync(path.join(root_dir, "src"))) {
 }
 
 var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
-var $ = cheerio.load(htmlRaw);
 
 //indexBuffer written to index.html
 //scriptBuffer written to main.js
-var indexBuffer = util.unescapeHtml($.html()); // since cheerio returns escaped characters
-var scriptBuffer = closureData.makeScript(util.getComponentMap(root_dir));
+var scriptBuffer = closureData.makeScript(getComponentMap(root_dir));
+
+function getComponentMap(root_dir) {
+    /*
+    *   Stores all components into an object such that:
+    *   Key: Component Name
+    *   Value: Raw Component Buffer
+    */
+    var cMap = {}
+    var files = fs.readdirSync(path.join(root_dir, "src/components"));
+    for (var i = 0; i < files.length; i++) {
+        var fName = files[i].split(".")[0]; //filename
+        var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
+        cMap[fName.toLowerCase()] = createExecObj(cBuffer.toString(), "template", "");
+    }
+    return cMap;
+}
 
 // creates an execution tree in the order of the DOM tree
 // in-line scripts are parsed and stored in the corresponding tree node as a closure
-async function createExecTree(target, context) {
-    var execTree = {
-        context: context,
-        closure: "",
-        children: []
-    }
-    var closure;
-    var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
-    // start and end index of in-line scripts
-    var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
-    var startI = closureI[0];
-    var endI = closureI[1];
-    var closureBuff = "";
-
-    if (startI == -1 || endI == -1) {
-        closure = "";
-    } else {
-        // remove the script
-        indexBuffer = indexBuffer.replace(rootValue.substring(startI, endI + 1), "");
-        closure = rootValue.substring(startI + 1, endI);
-        closureBuff = closureData.makeClosure(closure, context);
-    }
-    // if the script is empty or DNE we still setup an empty closure to bind env properties in closure.js
-    execTree.closure = closure;
-    for (let i = 0; i < target.childNodes.length; i++) {
-        let child = target.childNodes[i];
-        if (child.type == "tag") {
-            let execChild = await createExecTree(child, context + `.childNodes[${i}]`)
-            if (execChild)
-                execTree.children.push(execChild);
+function createExecObj(src, target, context) {
+    var $ = cheerio.load(src);
+    var srcBuffer = util.unescapeHtml($.html());
+    target = $(target)[0]
+    function _createExecTree(target, context) {
+        var execTree = {
+            context: context,
+            closure: "",
+            children: []
         }
+        var closure = "";
+        var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
+        // start and end index of in-line scripts
+        var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
+        var startI = closureI[0];
+        var endI = closureI[1];
+        var closureBuff = "";
+        if (startI != -1 && endI != -1) {
+            // remove the script
+            srcBuffer = srcBuffer.replace(rootValue.substring(startI, endI + 1), "");
+            closure = rootValue.substring(startI + 1, endI);
+            closureBuff = closureData.makeClosure(closure, context);
+        }
+        // if the script is empty or DNE we still setup an empty closure to bind env properties in closure.js
+        execTree.closure = closure;
+        for (let i = 0; i < target.childNodes.length; i++) {
+            let child = target.childNodes[i];
+            if (child.type == "tag" || (child.type == "root" && !context)) {
+                let execChild = _createExecTree(child, i);
+                if (execChild)
+                    execTree.children.push(execChild);
+            }
+        }
+        return execTree;
     }
-    return execTree;
+    var result = {
+        execTree: _createExecTree(target, context),
+        srcBuffer
+    };
+
+    if (!context){ // no context, assume to be loading a component
+        $ = cheerio.load(srcBuffer);
+        result.srcBuffer = cheerio.html($("template"));
+        result.execTree = result.execTree.children[0];
+    }
+    return result;
 }
 
 async function main() {
     //execution tree of document.body and descendants
-    var execTree = await createExecTree($('body')[0], "document.body");
+    var execObj = createExecObj(htmlRaw, "body", "document.body");
+    var execTree = execObj.execTree;
+    var indexBuffer = execObj.srcBuffer;
+
     var buildPath = path.join(root_dir, "./build");
     
     if (!fs.existsSync(buildPath))
