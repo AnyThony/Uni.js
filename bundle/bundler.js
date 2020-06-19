@@ -8,7 +8,7 @@ const path = require('path');
 const inlineParser = require('./inline-parser.js');
 const closureData = require('./env-scripts/closure');
 const util = require('./util.js');
-const fs = require('fs');
+const fs = require('fs-extra');
 var root_dir;
 
 if (args.length)
@@ -101,9 +101,7 @@ async function main() {
 
     var buildPath = path.join(root_dir, "./build");
     
-    if (!fs.existsSync(buildPath))
-        fs.mkdirSync(buildPath);
-
+    fs.emptyDirSync(buildPath);
     scriptBuffer += `const execTree = ${JSON.stringify(execTree)};` + closureData.postScript();
     // a copy of uniDOM.js
     var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');

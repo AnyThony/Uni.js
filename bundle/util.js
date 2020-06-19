@@ -1,7 +1,4 @@
-const ncp = require('ncp').ncp;
-const fs = require('fs');
-const path = require('path');
-ncp.limit = 16;
+const fs = require('fs-extra');
 
 function unescapeHtml(unsafe) {
     return unsafe
@@ -19,18 +16,13 @@ function copyToBuild(src, build) {
      */
     var options = {
         filter: dir => {
-            return dir.split('.').pop() != "uni"
+            return dir.split('.').pop() != "uni" 
+            && dir.split('\\').indexOf("components") == -1
         }
     }
-    ncp(src, build, options, err => {
+    fs.copy(src, build, options, err => {
         if (err) throw err;
-        // the component folder is copied but there are no ncp filters to avoid this
-        // a temp work around to just delete it right after
-        var componentDir = path.join(build, "/components");
-        if (fs.existsSync(componentDir)) {
-            fs.rmdirSync(componentDir);
-        }
     })
 }
 
-module.exports = { copyToBuild, unescapeHtml }
+module.exports = { copyToBuild, unescapeHtml}

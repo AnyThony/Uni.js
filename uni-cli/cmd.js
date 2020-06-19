@@ -1,13 +1,10 @@
-const fs = require("fs");
+const fs = require("fs-extra");
 const pkg = require("../package.json")
 const cwd = process.cwd();
 const figlet = require('figlet');
 const path = require('path');
 const chokidar = require('chokidar');
 const { execSync } = require('child_process');
-var ncp = require('ncp').ncp;
-
-ncp.limit = 16;
 
 function init(args) {
     console.log(figlet.textSync('Uni.JS', {
@@ -32,7 +29,7 @@ function init(args) {
     if (!fs.existsSync(dest))
         fs.mkdirSync(dest);
 
-    ncp(__dirname + '/res/src', dest, function(err) {
+    fs.copy(__dirname + '/res/src', dest, function(err) {
         if (err) {
             return console.error(err);
         }
