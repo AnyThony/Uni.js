@@ -25,7 +25,7 @@ Inline-scripts that run under a DOM element as context:
 ```js
 <div>
   {
-    this.find("#foo").innerText += "Polo!";
+    this.children[0].innerText += "Polo!";
   }
   <span id="foo">Marco</span>
 </div>
