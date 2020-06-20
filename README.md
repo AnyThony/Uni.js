@@ -155,7 +155,6 @@ And finally, accessing props from the component end is done with this.props:
 ```
 
 # State Management
-Uni respects the DOM tree's hierarchy when processing state management
 
 Declaring an initial state must be done on this.state:
 ```js        
