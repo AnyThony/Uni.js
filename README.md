@@ -154,3 +154,48 @@ The callback passed to bindState will be called once initially then upon any sta
 ```
       
 The callback passed to bindState will be called once initially then upon any state changes from setState.
+
+## State methods within descendants
+Descendants that have ancestor(s) with a defined initial state can also use these methods:
+
+```js    
+<div>
+  {
+    this.state = {foo: 2}
+    this.bindState(newState => {
+      console.log("foo is " + newState.foo);
+    });
+  }
+  <div id="child">
+    {
+      this.setState({foo: 3})
+    }
+  </div>
+</div>
+```
+      
+Descendants can setState to multiple ancestors with differing state attributes:
+
+```js
+<div id="ancestor">
+  {
+    this.state = {foo: 2}
+    this.bindState(newState => {
+      console.log("foo is " + newState.foo);
+    });
+  }
+  <div id="child">
+    {
+      this.state = {bar: 3}
+      this.bindState(newState => {
+        console.log("bar is " + newState.bar);
+      }); 
+    }
+    <div id="descendant">
+      {
+        this.setState({foo: 3, bar: 4});
+      }
+    </div>
+  </div>
+</div>
+```
