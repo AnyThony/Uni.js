@@ -1,9 +1,9 @@
 # About
 Uni is a lightweight Javascript framework for building UI
 
-- Hierarchy state management
+- State management
 - Components
-- In-line scripting
+- Parent-based In-line scripting
 
 #### Refer to the documentation [here](https://anythony.github.io/uni-docs/)
 
@@ -111,6 +111,48 @@ Components can be added dynamically with this.addComponent(name):
 ```
 
 addComponent appends a new component as a child into the script context.
+
+# Props
+Data known as props can be passed to reusable components upon initialization.
+
+For components initialized statically, props can be given through regular html attribute:
+
+        
+```js
+<body>
+  {
+    this.imports = ["navbar"];
+  }
+  <navbar title="foo"></navbar>
+</body>
+```
+
+      
+For components initialized dynamically, props can be given as an object through addComponent's second optional parameter.
+
+        
+```js
+<body>
+  {
+    this.imports = ["navbar"];
+    this.addComponent("navbar", {title: "foo"});
+  }
+</body>
+```
+
+      
+And finally, accessing props from the component end is done with this.props:
+
+        
+```js
+<template>
+  <div class="navbar">
+    {
+      console.log("My title:", this.props.title);
+    }
+  </div>
+</template>
+```
 
 # State Management
 Uni respects the DOM tree's hierarchy when processing state management
