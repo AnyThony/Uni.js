@@ -22,7 +22,6 @@ Inside a project directory, a dev environment with live reload can be started:
 
 Inline-scripts that run under a DOM element as context:
 
-Note: Uni assigns the method find as an alias for querySelector
 ```js
 <div>
   {
@@ -65,7 +64,7 @@ Assigning a callback to onFullLoad will call it once every descendent's script i
   ...
 </div>
 ```
-Assigning a callback to onChildLoad will call it everytime a descendant's script is ran.
+Assigning a callback to onChildLoad will call it everytime a child's script is ran.
 
 # Components
 
