@@ -19,7 +19,7 @@
     ],
     "repository": {
         "type": "git",
-        "url": "https://github.com/AnyThony/Uni.git"
+        "url": "git://github.com/anythony/uni.git"
     },
     "devDependencies": {
         "concurrently": "^5.2.0"
@@ -29,7 +29,6 @@
         "uni": "./uni-cli/index.js",
         "unify": "./uni-cli/index.js"
     },
-    "publishConfig": { "registry": "https://npm.pkg.github.com/" },
     "author": "Anthony Nguyen",
     "license": "MIT"
 }

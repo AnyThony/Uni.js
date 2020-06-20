@@ -31,19 +31,22 @@ function getComponentMap(root_dir) {
     /*
     *   Stores all components into an object such that:
     *   Key: Component Name
-    *   Value: Raw Component Buffer
+    *   Value: Execution Tree (execTree), HTML Source (srcBuffer)
     */
+    var comDir = path.join(root_dir, "src/components");
     var cMap = {}
-    var files = fs.readdirSync(path.join(root_dir, "src/components"));
+    if (!fs.existsSync(comDir)) 
+        return cMap;
+    var files = fs.readdirSync(comDir);
     for (var i = 0; i < files.length; i++) {
         var fName = files[i].split(".")[0]; //filename
-        var cBuffer = fs.readFileSync(path.join(root_dir, `src/components/${files[i]}`));
+        var cBuffer = fs.readFileSync(path.join(comDir, files[i]));
         cMap[fName.toLowerCase()] = createExecObj(cBuffer.toString(), "template", "");
     }
     return cMap;
 }
 
-// creates an execution tree in the order of the DOM tree
+// creates an execution tree and html src buffer
 // in-line scripts are parsed and stored in the corresponding tree node as a closure
 function createExecObj(src, target, context) {
     var $ = cheerio.load(src);
@@ -85,7 +88,7 @@ function createExecObj(src, target, context) {
         srcBuffer
     };
 
-    if (!context){ // no context, assume to be loading a component
+    if (!context){ // no context, assumed to be loading a component
         $ = cheerio.load(srcBuffer);
         result.srcBuffer = cheerio.html($("template"));
         result.execTree = result.execTree.children[0];
@@ -93,7 +96,7 @@ function createExecObj(src, target, context) {
     return result;
 }
 
-async function main() {
+function main() {
     //execution tree of document.body and descendants
     var execObj = createExecObj(htmlRaw, "body", "document.body");
     var execTree = execObj.execTree;
