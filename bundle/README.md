@@ -2,9 +2,9 @@
 
 When building, the bundler script is ran. 
 
-It is responsible for translating Uni apps into native HTML and Javascript.
+It is responsible for translating Uni apps into HTML and Javascript.
 
-Note that only app.uni in-line scripts are pre-translated, components are stored in tables and are to be loaded upon runtime.
+app.uni and each component are assigned their own execution tree that runs upon load
 
 ![Bundling](https://i.imgur.com/txPkD51.png)
 
@@ -12,12 +12,8 @@ Note that only app.uni in-line scripts are pre-translated, components are stored
 
 Two scripts are produced by the bundler that index.html runs.
 
-Note that index.html is identical to app.uni with only its in-line scripts removed as they are pre-translated already.
+index.html is generated from app.uni
 
 uniDOM.js loads the uni library
 
-main.js does the following:
-
-1. Runs translated in-line scripts in the app's entry point (app.uni)
-2. Any components used via importing will be loaded from a table generated from the bundler
-3. Components are outside the app's entry point and are untranslated. During runtime it will be parsed and ran via tools from the uni library. 
+main.js contains and evaluates execution trees upon runtime.
