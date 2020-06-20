@@ -26,8 +26,12 @@ Inline-scripts that run under a DOM element as context:
 <div>
   {
     this.children[0].innerText += "Polo!";
+    this.children[1].innerText += "bar";
+    this.querySelector("#x").innerText = "y";
   }
-  <span id="foo">Marco</span>
+  <span>Marco</span>
+  <span>foo</span>
+  <span id="x"></span>
 </div>
 ```
 
