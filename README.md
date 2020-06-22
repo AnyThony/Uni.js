@@ -1,9 +1,9 @@
 # About
 Uni is a lightweight Javascript framework for building UI
 
-- Hierarchy state management
+- State management
 - Components
-- In-line scripting
+- Parent-based In-line scripting
 
 #### Refer to the documentation [here](https://anythony.github.io/uni-docs/)
 
@@ -25,9 +25,13 @@ Inline-scripts that run under a DOM element as context:
 ```js
 <div>
   {
-    this.find("#foo").innerText += "Polo!";
+    this.children[0].innerText += "Polo!";
+    this.children[1].innerText += "bar";
+    this.querySelector("#x").innerText = "y";
   }
-  <span id="foo">Marco</span>
+  <span>Marco</span>
+  <span>foo</span>
+  <span id="x"></span>
 </div>
 ```
 
@@ -108,8 +112,49 @@ Components can be added dynamically with this.addComponent(name):
 
 addComponent appends a new component as a child into the script context.
 
+# Props
+Data known as props can be passed to reusable components upon initialization.
+
+For components initialized statically, props can be given through regular html attribute:
+
+        
+```js
+<body>
+  {
+    this.imports = ["navbar"];
+  }
+  <navbar title="foo"></navbar>
+</body>
+```
+
+      
+For components initialized dynamically, props can be given as an object through addComponent's second optional parameter.
+
+        
+```js
+<body>
+  {
+    this.imports = ["navbar"];
+    this.addComponent("navbar", {title: "foo"});
+  }
+</body>
+```
+
+      
+And finally, accessing props from the component end is done with this.props:
+
+        
+```js
+<template>
+  <div class="navbar">
+    {
+      console.log("My title:", this.props.title);
+    }
+  </div>
+</template>
+```
+
 # State Management
-Uni respects the DOM tree's hierarchy when processing state management
 
 Declaring an initial state must be done on this.state:
 ```js        
@@ -150,3 +195,48 @@ The callback passed to bindState will be called once initially then upon any sta
 ```
       
 The callback passed to bindState will be called once initially then upon any state changes from setState.
+
+## State methods within descendants
+Descendants that have ancestor(s) with a defined initial state can also use these methods:
+
+```js    
+<div>
+  {
+    this.state = {foo: 2}
+    this.bindState(newState => {
+      console.log("foo is " + newState.foo);
+    });
+  }
+  <div id="child">
+    {
+      this.setState({foo: 3})
+    }
+  </div>
+</div>
+```
+      
+Descendants can setState to multiple ancestors with differing state attributes:
+
+```js
+<div id="ancestor">
+  {
+    this.state = {foo: 2}
+    this.bindState(newState => {
+      console.log("foo is " + newState.foo);
+    });
+  }
+  <div id="child">
+    {
+      this.state = {bar: 3}
+      this.bindState(newState => {
+        console.log("bar is " + newState.bar);
+      }); 
+    }
+    <div id="descendant">
+      {
+        this.setState({foo: 3, bar: 4});
+      }
+    </div>
+  </div>
+</div>
+```
