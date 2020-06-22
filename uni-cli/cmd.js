@@ -50,15 +50,7 @@ function build() {
     console.log("Done.");
 }
 
-function serve(args) {
-    console.log("Bundling...");
-    execSync(`concurrently --kill-others 
-    \"live-server --WATCH=/build --mount=/:%cd%/build --wait=200 --no-css-inject\" 
-    \"node ${__dirname + '/../bundle/watch.js'} ${cwd}\"`);
-    console.log("Done.");
-}
-
-function watch(args) {
+function watch() {
     var timeout = 600;
     //timeout is a temp fix since multiple changes at once makes watch build multiple times
     var isBuilding = false;

@@ -1,6 +1,5 @@
 /*
  * This script compiles all user scripts of app.uni
- * Any nested/dynamic components are processed on runtime using uniDOM.js
  */
 const [, , ...args] = process.argv;
 const cheerio = require('cheerio');

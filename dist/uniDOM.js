@@ -54,7 +54,7 @@ var uni;
 
     // search children of target for component tags then load if exists
     function registerComponent(target, name) {
-        var component = uni._rawComponents[name];
+        var component = uni._rawComponents[name.toLowerCase()];
         var componentHTML = component && parser.parseFromString(component.srcBuffer, "text/html");;
         var componentExec = component && component.execTree;
         if (!component) return;
@@ -148,6 +148,11 @@ var uni;
         var children = tree.children;
         //console.log(tree, context);
         context.props = props;
+        /*if (context.childNodes.length &&
+            typeof context.childNodes[0].data === 'string' &&
+            context.childNodes[0].data.trim() == ""){
+            context.childNodes[0].remove(); //dirty workaround
+        }*/
         runClosure(tree.closure, context);
         context._didInit = true;
         for (var i = 0; i < children.length; i++){

@@ -6,7 +6,7 @@ function unescapeHtml(unsafe) {
         .replace(/&lt;/g, "<")
         .replace(/&gt;/g, ">")
         .replace(/&quot;/g, "\"")
-        .replace(/&#039;/g, "'");
+        .replace(/&apos;/g, "'");
 }
 
 function copyToBuild(src, build) {
