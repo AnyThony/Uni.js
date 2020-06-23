@@ -8,6 +8,7 @@ const inlineParser = require('./inline-parser.js');
 const closureData = require('./env-scripts/closure');
 const util = require('./util.js');
 const fs = require('fs-extra');
+const Terser = require("terser");
 var root_dir;
 
 if (args.length)
@@ -107,10 +108,13 @@ function main() {
     scriptBuffer += `const execTree = ${JSON.stringify(execTree)};` + closureData.postScript();
     // a copy of uniDOM.js
     var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
-
+    var mainMinified = Terser.minify(scriptBuffer);
+    if (mainMinified.error){
+        throw mainMinified.error
+    }
     // writes index, main and uniDOM to build, as well as external resources if exists
     fs.writeFileSync(path.join(buildPath, "uniDOM.js"), uniBuffer);
-    fs.writeFileSync(path.join(buildPath, "main.js"), scriptBuffer);
+    fs.writeFileSync(path.join(buildPath, "main.js"), mainMinified.code);
     fs.writeFileSync(path.join(buildPath, "index.html"), indexBuffer);
     // copy any other ext resource
     util.copyToBuild(path.join(root_dir, "./src"), path.join(root_dir, "./build"));
