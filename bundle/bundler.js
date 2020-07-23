@@ -58,18 +58,23 @@ function createExecObj(src, target, context) {
             closure: "",
             children: []
         }
-        var closure = "";
+        var closure = util.findScriptTag($, target);
         var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
         // start and end index of in-line scripts
         var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
         var startI = closureI[0];
         var endI = closureI[1];
-        var closureBuff = "";
-        if (startI != -1 && endI != -1) {
+        // uses script tag
+        if (closure){
+            let outerScript = cheerio.html(closure);
+            closure = closure.html();
+            srcBuffer = srcBuffer.replace(outerScript, "");
+            util.clearScriptTag($, target);
+        }
+        else if (startI != -1 && endI != -1) { // uses curly braces
             // remove the script
             srcBuffer = srcBuffer.replace(rootValue.substring(startI, endI + 1), "");
             closure = rootValue.substring(startI + 1, endI);
-            closureBuff = closureData.makeClosure(closure, context);
         }
         // if the script is empty or DNE we still setup an empty closure to bind env properties in closure.js
         execTree.closure = closure;

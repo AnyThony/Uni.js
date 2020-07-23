@@ -1,5 +1,29 @@
 const fs = require('fs-extra');
 
+// remove script tag node from the cheerio dom
+function clearScriptTag($, element){
+    var childNodes = element.childNodes;
+    for (let i = 0 ; i < childNodes.length; i++){
+        if (childNodes[i].type === "script" &&
+            $(childNodes[i]).attr("name") == "uni"){
+            let hasTextAfter = i != childNodes.length-1 &&
+                               childNodes[i + 1].type === "text";
+            childNodes.splice(i, hasTextAfter ? 2 : 1);
+            return;
+        }
+    }
+}
+
+function findScriptTag($, element){
+    element = $(element)
+    if (element.children().length === 0
+        || element.children()[0].name.toLowerCase() !== "script"
+        || $(element.children()[0]).attr("name") !== "uni"
+        ) 
+        return "";
+    return $(element.children()[0])
+}
+
 function unescapeHtml(unsafe) {
     return unsafe
         .replace(/&amp;/g, "&")
@@ -25,4 +49,4 @@ function copyToBuild(src, build) {
     })
 }
 
-module.exports = { copyToBuild, unescapeHtml}
+module.exports = { copyToBuild, unescapeHtml, findScriptTag, clearScriptTag}
