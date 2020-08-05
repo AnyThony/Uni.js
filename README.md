@@ -20,9 +20,7 @@ Inside a project directory, a dev environment with live reload can be started:
 
 # In-line Scripting
 
-## Inline Javascript code can be written in two ways:
-
-### Inside a "uni" named Script tag:
+### Write code inside a "uni" named Script tag:
 
 ```html
 <div class="myClass">
