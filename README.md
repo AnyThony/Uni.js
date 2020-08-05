@@ -20,17 +20,39 @@ Inside a project directory, a dev environment with live reload can be started:
 
 # In-line Scripting
 
-Inline-scripts that run under a DOM element as context:
+## Inline Javascript code can be written in two ways:
+
+### Inside a "uni" named Script tag:
 
 ```html
-<div>
+<div class="myClass">
   <script name="uni">
+    console.log(this.className) // myClass
+  </script>
+</div>
+```
+
+### Or inside curly braces:
+
+```js
+<div class="myClass">
+  {
+    console.log(this.className) // myClass
+  }
+</div>
+```
+
+## Inline-scripts use it's parent DOM element as context:
+
+```html
+<div class="myClass">
+  <script name="uni">
+    console.log(this.className); // myClass
     this.children[0].innerText += "Polo!";
-    this.children[1].innerText += "bar";
+     
     this.querySelector("#x").innerText = "y";
   </script>
   <span>Marco</span>
-  <span>foo</span>
   <span id="x"></span>
 </div>
 ```
