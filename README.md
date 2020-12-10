@@ -20,17 +20,37 @@ Inside a project directory, a dev environment with live reload can be started:
 
 # In-line Scripting
 
-Inline-scripts that run under a DOM element as context:
+### Write code inside a "uni" named Script tag:
+
+```html
+<div class="myClass">
+  <script name="uni">
+    console.log(this.className) // myClass
+  </script>
+</div>
+```
+
+### Or inside curly braces:
 
 ```js
-<div>
+<div class="myClass">
   {
-    this.children[0].innerText += "Polo!";
-    this.children[1].innerText += "bar";
-    this.querySelector("#x").innerText = "y";
+    console.log(this.className) // myClass
   }
+</div>
+```
+
+## Inline-scripts use it's parent DOM element as context:
+
+```html
+<div class="myClass">
+  <script name="uni">
+    console.log(this.className); // myClass
+    this.children[0].innerText += "Polo!";
+     
+    this.querySelector("#x").innerText = "y";
+  </script>
   <span>Marco</span>
-  <span>foo</span>
   <span id="x"></span>
 </div>
 ```
@@ -44,27 +64,27 @@ Every DOM element runs itself first then recurses on its children.
 The following are events that can be assigned upon initialization:
 
 ### onFullLoad
-```js
+```html
 <div>
-  {
+  <script name="uni">
     this.onFullLoad = () => {
       // called after every descendant has loaded
     }
-  }
+  </script>
   ...
 </div>
 ``` 
 Assigning a callback to onFullLoad will call it once every descendent's script is ran.
 
 ### onChildLoad
-```js
+```html
 <div>
-  {
+  <script name="uni">
     this.onChildLoad = (child) => {
       console.log(child + " has loaded");
       // called when a descendant loads
     }
-  }
+  </script>
   ...
 </div>
 ```
@@ -76,12 +96,12 @@ You can split views into components
 
 Component files are automatically registered in the directory src/components.
 The file name must be the desired component name. (In this case it's navbar.uni)
-```js        
+```html      
 <template>
   <div class="navbar">
-    {
+    <script name="uni">
       // blah
-    }
+    </script>
     ...
   </div>
 </template>
@@ -89,11 +109,11 @@ The file name must be the desired component name. (In this case it's navbar.uni)
 To use a component, this.imports must be declared with its name inside the parent element.
 
 You can then declare a regular HTML element with its tagname:
-```js
+```html
 <body>
-  {
+  <script name="uni">
     this.imports = ["navbar"];
-  }
+  </script>
   <navbar></navbar>
 </body>
 ```
@@ -101,12 +121,12 @@ You can then declare a regular HTML element with its tagname:
 Components can be added dynamically with this.addComponent(name):
 
 ### addComponent(name)
-```js       
+```html       
 <body>
-  {
+  <script name="uni">
     this.imports = ["navbar"];
     this.addComponent("navbar");
-  }
+  </script>
 </body>
 ```
 
@@ -118,11 +138,11 @@ Data known as props can be passed to reusable components upon initialization.
 For components initialized statically, props can be given through regular html attribute:
 
         
-```js
+```html
 <body>
-  {
+  <script name="uni">
     this.imports = ["navbar"];
-  }
+  </script>
   <navbar title="foo"></navbar>
 </body>
 ```
@@ -131,12 +151,12 @@ For components initialized statically, props can be given through regular html a
 For components initialized dynamically, props can be given as an object through addComponent's second optional parameter.
 
         
-```js
+```html
 <body>
-  {
+  <script name="uni">
     this.imports = ["navbar"];
     this.addComponent("navbar", {title: "foo"});
-  }
+  </script>
 </body>
 ```
 
@@ -144,12 +164,12 @@ For components initialized dynamically, props can be given as an object through 
 And finally, accessing props from the component end is done with this.props:
 
         
-```js
+```html
 <template>
   <div class="navbar">
-    {
+    <script name="uni">
       console.log("My title:", this.props.title);
-    }
+  </script>
   </div>
 </template>
 ```
@@ -157,23 +177,23 @@ And finally, accessing props from the component end is done with this.props:
 # State Management
 
 Declaring an initial state must be done on this.state:
-```js        
+```html        
 <div>
-  {
+  <script name="uni">
     this.state = {foo: 2}
-  }
+  </script>
 </div>
 ```
       
 ### bindState(callback)
-```js
+```html
 <div>
-  {
+  <script name="uni">
     this.state = {foo: 2}
     this.bindState(newState => {
       console.log("foo is " + newState.foo);
     });
-  }
+  </script>
   ...
 </div>
 ```
@@ -181,15 +201,15 @@ Declaring an initial state must be done on this.state:
 The callback passed to bindState will be called once initially then upon any state changes from setState thereafter.
 
 ### setState(object)
-```js        
+```html        
 <div>
-  {
+  <script name="uni">
     this.state = {foo: 2}
     this.bindState(newState => {
       console.log("foo is " + newState.foo);
     });
     this.setState({foo: 3});
-  }
+  </script>
   ...
 </div>
 ```
@@ -199,43 +219,43 @@ The callback passed to bindState will be called once initially then upon any sta
 ## State methods within descendants
 Descendants that have ancestor(s) with a defined initial state can also use these methods:
 
-```js    
+```html
 <div>
-  {
+  <script name="uni">
     this.state = {foo: 2}
     this.bindState(newState => {
       console.log("foo is " + newState.foo);
     });
-  }
+  </script>
   <div id="child">
-    {
+    <script name="uni">
       this.setState({foo: 3})
-    }
+    </script>
   </div>
 </div>
 ```
       
 Descendants can setState to multiple ancestors with differing state attributes:
 
-```js
+```html
 <div id="ancestor">
-  {
+  <script name="uni">
     this.state = {foo: 2}
     this.bindState(newState => {
       console.log("foo is " + newState.foo);
     });
-  }
+  </script>
   <div id="child">
-    {
+    <script name="uni">
       this.state = {bar: 3}
       this.bindState(newState => {
         console.log("bar is " + newState.bar);
       }); 
-    }
+    </script>
     <div id="descendant">
-      {
+      <script name="uni">
         this.setState({foo: 3, bar: 4});
-      }
+      </script>
     </div>
   </div>
 </div>
