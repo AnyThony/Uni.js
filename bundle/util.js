@@ -2,7 +2,7 @@ const fs = require('fs-extra');
 
 // remove script tag node from the cheerio dom
 function clearScriptTag($, element){
-    var childNodes = element.childNodes;
+    const childNodes = element.childNodes;
     for (let i = 0 ; i < childNodes.length; i++){
         if (childNodes[i].type === "script" &&
             $(childNodes[i]).attr("name") == "uni"){
@@ -38,7 +38,7 @@ function copyToBuild(src, build) {
      *   Takes path src and recursivly copies all files to the new build location
      *   .uni files are ignored
      */
-    var options = {
+    const options = {
         filter: dir => {
             return dir.split('.').pop() != "uni" 
             && dir.split('\\').indexOf("components") == -1

@@ -9,7 +9,7 @@ const closureData = require('./env-scripts/closure');
 const util = require('./util.js');
 const fs = require('fs-extra');
 const Terser = require("terser");
-var root_dir;
+let root_dir;
 
 if (args.length)
     root_dir = args[0];
@@ -21,11 +21,11 @@ if (!fs.existsSync(path.join(root_dir, "src"))) {
     root_dir = root_dir + '/../';
 }
 
-var htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
+const htmlRaw = fs.readFileSync(path.join(root_dir, "src/app.uni"), "utf8");
 
 //indexBuffer written to index.html
 //scriptBuffer written to main.js
-var scriptBuffer = closureData.makeScript(getComponentMap(root_dir));
+let scriptBuffer = closureData.makeScript(getComponentMap(root_dir));
 
 function getComponentMap(root_dir) {
     /*
@@ -33,14 +33,14 @@ function getComponentMap(root_dir) {
     *   Key: Component Name
     *   Value: Execution Tree (execTree), HTML Source (srcBuffer)
     */
-    var comDir = path.join(root_dir, "src/components");
-    var cMap = {}
+    const comDir = path.join(root_dir, "src/components");
+    const cMap = {}
     if (!fs.existsSync(comDir)) 
         return cMap;
-    var files = fs.readdirSync(comDir);
-    for (var i = 0; i < files.length; i++) {
-        var fName = files[i].split(".")[0]; //filename
-        var cBuffer = fs.readFileSync(path.join(comDir, files[i]));
+    const files = fs.readdirSync(comDir);
+    for (let i = 0; i < files.length; i++) {
+        const fName = files[i].split(".")[0]; //filename
+        const cBuffer = fs.readFileSync(path.join(comDir, files[i]));
         cMap[fName.toLowerCase()] = createExecObj(cBuffer.toString(), "template", "");
     }
     return cMap;
@@ -49,21 +49,21 @@ function getComponentMap(root_dir) {
 // creates an execution tree and html src buffer
 // in-line scripts are parsed and stored in the corresponding tree node as a closure
 function createExecObj(src, target, context) {
-    var $ = cheerio.load(src);
-    var srcBuffer = util.unescapeHtml($.html());
+    let $ = cheerio.load(src);
+    let srcBuffer = util.unescapeHtml($.html());
     target = $(target)[0]
     function _createExecTree(target, context) {
-        var execTree = {
+        const execTree = {
             context: context,
             closure: "",
             children: []
         }
-        var closure = util.findScriptTag($, target);
-        var rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
+        let closure = util.findScriptTag($, target);
+        const rootValue = target.childNodes.length ? target.childNodes[0].nodeValue : "";
         // start and end index of in-line scripts
-        var closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
-        var startI = closureI[0];
-        var endI = closureI[1];
+        const closureI = rootValue ? inlineParser.scanForClosure(rootValue) : [-1, -1]
+        const startI = closureI[0];
+        const endI = closureI[1];
         // uses script tag
         if (closure){
             let outerScript = cheerio.html(closure);
@@ -88,12 +88,12 @@ function createExecObj(src, target, context) {
         }
         return execTree;
     }
-    var result = {
+    const result = {
         execTree: _createExecTree(target, context),
         srcBuffer
     };
 
-    if (!context){ // no context, assumed to be loading a component
+    if (!context){ // no context, assumed to be a component root
         $ = cheerio.load(srcBuffer);
         result.srcBuffer = cheerio.html($("template"));
         result.execTree = result.execTree.children[0];
@@ -103,17 +103,17 @@ function createExecObj(src, target, context) {
 
 function main() {
     //execution tree of document.body and descendants
-    var execObj = createExecObj(htmlRaw, "body", "document.body");
-    var execTree = execObj.execTree;
-    var indexBuffer = execObj.srcBuffer;
+    const execObj = createExecObj(htmlRaw, "body", "document.body");
+    const execTree = execObj.execTree;
+    const indexBuffer = execObj.srcBuffer;
 
-    var buildPath = path.join(root_dir, "./build");
+    const buildPath = path.join(root_dir, "./build");
     
     fs.emptyDirSync(buildPath);
     scriptBuffer += `const execTree = ${JSON.stringify(execTree)};` + closureData.postScript();
     // a copy of uniDOM.js
-    var uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
-    var mainMinified = Terser.minify(scriptBuffer);
+    const uniBuffer = fs.readFileSync(__dirname + '/../dist/uniDOM.js');
+    const mainMinified = Terser.minify(scriptBuffer);
     if (mainMinified.error){
         throw mainMinified.error
     }

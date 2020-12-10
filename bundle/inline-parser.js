@@ -3,10 +3,10 @@ const TOK_END = "}";
 
 // scan the raw data for in-line code
 function scanForClosure(data) {
-    var left = data && data[0] == TOK_START ? 0 : -1;
-    var right = -1;
+    let left = data && data[0] == TOK_START ? 0 : -1;
+    let right = -1;
 
-    for (var i = 0; i < data.length - 1; i++) {
+    for (let i = 0; i < data.length - 1; i++) {
         if (data[i] == "\\") {
             continue;
         }

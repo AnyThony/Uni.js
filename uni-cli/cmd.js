@@ -19,13 +19,13 @@ function init(args) {
         return console.error("Failed: Missing project name")
     }
 
-    var resPkg = fs.readFileSync(__dirname + '/res/package.json');
+    let resPkg = fs.readFileSync(__dirname + '/res/package.json');
     resPkg = JSON.parse(resPkg.toString());
-    var projectName = args[1];
-    var root = path.join(cwd, projectName);
+    let projectName = args[1];
+    let root = path.join(cwd, projectName);
     if (!fs.existsSync(root))
         fs.mkdirSync(root);
-    var dest = path.join(root, "src");
+    let dest = path.join(root, "src");
     if (!fs.existsSync(dest))
         fs.mkdirSync(dest);
 
@@ -51,9 +51,9 @@ function build() {
 }
 
 function watch() {
-    var timeout = 600;
+    const timeout = 600;
     //timeout is a temp fix since multiple changes at once makes watch build multiple times
-    var isBuilding = false;
+    let isBuilding = false;
     chokidar.watch(cwd + '/src').on('change', (event, path) => {
         if (!isBuilding) {
             build();
